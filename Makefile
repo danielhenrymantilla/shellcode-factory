@@ -58,7 +58,7 @@ $(TESTER): $(TESTER).c
 
 $(SHELLCODE): $(SHELLCODE).s
 ifneq ($(E), main)
-	$(CC) -m$(ARCH) -nostdlib -o $@ $<
+	$(CC) -m$(ARCH) -nostdlib -o $@ $< -e$(E)
 else
 	$(CC) -m$(ARCH) -o $@ $<
 endif
