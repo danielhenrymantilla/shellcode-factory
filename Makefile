@@ -56,28 +56,32 @@ test: $(TESTER)
 	./$<
 
 $(TESTER): $(TESTER).c
-	$(CC) -m$(ARCH) -o $(TESTER) $(TESTER).c -fno-stack-protector -z execstack
+	$(CC) -m$(ARCH) -fno-stack-protector -z execstack -o $@ $<
 
 $(BIN).o: $(SOURCE)
 ifneq ($(EXT), .asm)
-	$(CC) -m$(ARCH) -nostdlib -c $< -e$(E)
+	$(CC) -m$(ARCH) -nostdlib -o $@ -c $< -e$(E)
+else
+ifeq ($(ARCH), 64)
+	nasm -f elf64 -o $@ $<
 else
 	nasm -f elf -o $@ $<
 endif
-#ifneq ($(E), main)
-#	$(CC) -m$(ARCH) -nostdlib -o $@ $< -e$(E)
-#else
-#	$(CC) -m$(ARCH) -o $@ $<
-#endif
+endif
 
 $(BIN).hex: $(BIN).o
-	@objdump -d $<
+	@objdump -d $< # Optional -
 	@gdb -n -batch -ex "x/`gdb -n -batch -ex "p \`gdb -n -batch -ex "info file" $< | grep .text | cut -d "i" -f 1\`" | cut -d "-" -f 2`bx _start" $< | cut -d ":" -f 2 > $@
 
 a: $(AUTO)
 $(AUTO): $(BIN).hex
-	@python shc_cleaner.py "`cat $<`" > $(AUTO).c
-	@echo 'int main() { int* ret; ret = (int *)&ret + 2; *ret = (int)shellcode; return 0; }' >> $(AUTO).c
+ifeq ($(ARCH), 64)
+	@echo '#define WORD long /* 64 bits */\n' > $(AUTO).c
+else
+	@echo '#define WORD int /* 32 bits */\n' > $(AUTO).c
+endif
+	@python shc_cleaner.py "`cat $<`" >> $(AUTO).c
+	@echo '\nint main() {\n  WORD* ret;\n  ret = (WORD *) &ret + 2; /* Saved IP */\n  *ret = (WORD) shellcode;\n  return 0;\n}' >> $(AUTO).c
 	@rm -f $<
 	@$(CC) -m$(ARCH) -z execstack -fno-stack-protector -o $(AUTO) $(AUTO).c
 	@echo "\nC program compiled successfully.\nRunning it:"
