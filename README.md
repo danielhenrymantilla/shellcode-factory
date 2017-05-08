@@ -42,6 +42,6 @@
 
 3. `python`
 
-4. `objdump` (optional if you comment out the objdump lines in the _Makefile_)
+4. `objdump` (optional: you can comment out the objdump lines in the _Makefile_)
 
-5. `nano` (optional (`set` and `put`, and you replace the `EDITOR=...` line in the _Makefile_ by your own editor)
+5. `nano` (optional: `set` and `put` targets only, and you can replace the `EDITOR=...` line in the _Makefile_ by your own editor)
