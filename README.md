@@ -1,33 +1,47 @@
-Usage:
+# Shellcode Factory tool
 
-	make targets [parameters]
+## Usage:
+
+	`make targets [parameters]`
  
-targets:
+### targets:
 
-  shellcode	- will compile the assembly code from shellcode.s
++ `shellcode`			- will compile the assembly code from shellcode.s
 
-  print/xxd/p	- will dump the contents of 'shellcode' in hex (first NN bytes)
++ `print` / `xxd` / `p`		- will dump the contents of _shellcode_ in hex (first NN bytes)
 
-  set		- will call 'nano shellcode.s', to set the source assembly code
++ `set`				- will call `nano shellcode.s`, to set the source assembly code
 
-  put		- will call 'nano tester.c', to put in it hex-encoded shellcode
++ `put`				- will call `nano tester.c`, to put in it hex-encoded shellcode
 
-  test		- will compile 'tester.c' and run it, thus testing the shellcode
++ `test`			- will compile _tester.c_ and run it, thus testing the shellcode
 
-  auto/a	- will do all of the above in one single step:
- compiling 'shellcode.s' into hex bytes,
- loading those hex bytes into an auto-generated tester program ('auto.c')
- compiling and running that very program
++ `auto` / `a`			- will do all of the above in one single step:
+
+   compiling _shellcode.s_ into hex bytes,  
+   loading those hex bytes into an auto-generated tester program (_auto.c_)  
+   compiling and running that very program
  
-parameters:
+### parameters:
 
-  NN=XX    (default=80)		Maximum length of the shellcode (XX bytes)
++ `NN=XX`    (default=80)		Maximum length of the shellcode (XX bytes)
 
-  ARCH=XX  (default=32)		XX-bit binaries (32 / 64)
++ `ARCH=XX`  (default=32)		XX-bit binaries (32 / 64)
 
-  E=XX     (default=_start)	Entry point of the assembly code (e.g. main)
++ `E=XX`     (default=_\_start_)	Entry point of the assembly code (e.g. _main_)
 
-For instance, 'make print NN=50' will print 50 hex-bytes of (32-bit) shellcode
-	 and, 'make auto  NN=120 ARCH=64' will test 120 bytes of x64 shellcode
+### Examples:
++ `make print NN=50` will print 50 hex-bytes of (32-bit) shellcode
 
-Requires: objdump, gdb, gcc, python
++ `make auto  NN=120 ARCH=64` will test 120 bytes of x64 shellcode
+
+## Requires: 
+1. `gcc` 
+
+2. `gdb`
+
+3. `python`
+
+4. `objdump` (optional if you comment out the objdump lines in the _Makefile_)
+
+5. `nano` (optional if you replace the `EDITOR=...` line in the _Makefile_ by your own editor)
