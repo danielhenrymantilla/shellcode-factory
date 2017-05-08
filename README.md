@@ -8,7 +8,7 @@
 
 + `shellcode`			- will compile the assembly code from shellcode.s
 
-+ `print` / `xxd` / `p`		- will dump the contents of _shellcode_ in hex (first NN bytes)
++ `print` / `xxd` / `p`		- will dump the contents of _shellcode_ in hex
 
 + `set`				- will call `nano shellcode.s`, to set the source assembly code
 
@@ -24,24 +24,26 @@
  
 ### parameters:
 
-+ `NN=XX`    (default=80)		Maximum length of the shellcode (XX bytes)
-
 + `ARCH=XX`  (default=32)		XX-bit binaries (32 / 64)
+
++  `SOURCE=file`  (default=_shellcode.s_)	Source assembly filename
 
 + `E=XX`     (default=_\_start_)	Entry point of the assembly code (e.g. _main_)
 
 ### Examples:
-+ `make print NN=50` will print 50 hex-bytes of (32-bit) shellcode
++ `make print BIN=foo` will print the shellcode from _foo.s_
 
-+ `make auto  NN=120 ARCH=64` will test 120 bytes of x64 shellcode
++ `make auto ARCH=64 E=main` will test the x64 shellcode starting at main
 
 ## Requires: 
-1. `gcc` 
+1. `gcc` (`as` frontend) and `nasm` for GAS and INTEL syntax respectively (extensions _.s_ and _.asm_)
 
-2. `gdb`
+2. `gdb` (it could actually be replaced by `objdump` in this script, but it is still a *really* recommended tool to debug a shellcode)
 
 3. `python`
 
-4. `objdump` (optional: you can comment out the objdump lines in the _Makefile_)
+4. `cut`
 
-5. `nano` (optional: `set` and `put` targets only, and you can replace the `EDITOR=...` line in the _Makefile_ by your own editor)
+5. `objdump` (optional: you can comment out the objdump lines in the _Makefile_)
+
+6. `nano` (optional: `set` and `put` targets only, and you can replace the `EDITOR=...` line in the _Makefile_ by your own editor)
