@@ -17,6 +17,9 @@ TESTER=tester
 # Name of the automatically-generated C file and binary (no .c extension).
 AUTO=auto
 
+# Program to edit files with
+EDITOR=nano
+
 ## COMMANDS ##
 .PHONY: all test p print hexdump xxd help put clean a
 
@@ -28,8 +31,8 @@ help:
 	@echo "targets:"
 	@echo "  $(SHELLCODE)\t- will compile the assembly code from $(SHELLCODE).s"
 	@echo "  print/xxd/p\t- will dump the contents of '$(SHELLCODE)' in hex (first NN bytes)"
-	@echo "  set\t\t- will call 'nano $(SHELLCODE).s', to set the source assembly code"
-	@echo "  put\t\t- will call 'nano $(TESTER).c', to put in it hex-encoded shellcode"
+	@echo "  set\t\t- will call '$(EDITOR) $(SHELLCODE).s', to set the source assembly code"
+	@echo "  put\t\t- will call '$(EDITOR) $(TESTER).c', to put in it hex-encoded shellcode"
 	@echo "  test\t\t- will compile '$(TESTER).c' and run it, thus testing the shellcode"
 	@echo "  $(AUTO)/a\t\t- will do all of the above in one single step:"
 	@echo "   > compiling '$(SHELLCODE).s' into hex bytes,"
@@ -45,10 +48,10 @@ help:
 
 
 set: $(SHELLCODE).s
-	nano $<
+	$(EDITOR) $<
 
 put: $(TESTER).c
-	nano $<
+	$(EDITOR) $<
 
 test: $(TESTER)
 	./$<

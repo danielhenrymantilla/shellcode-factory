@@ -44,4 +44,4 @@
 
 4. `objdump` (optional if you comment out the objdump lines in the _Makefile_)
 
-5. `nano` (optional if you replace the `EDITOR=...` line in the _Makefile_ by your own editor)
+5. `nano` (optional (`set` and `put`, and you replace the `EDITOR=...` line in the _Makefile_ by your own editor)
