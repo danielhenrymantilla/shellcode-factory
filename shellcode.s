@@ -6,9 +6,8 @@ _start:
 	movb $11, %al
 	jmp binsh
 	back:
-	movl %esp, %ecx
+	movl %edx, %ecx
 	movl (%esp), %ebx
-	movl %edx, 0x4(%esp)
 	movb %dl, 0x7(%ebx)
 	int $0x80
 binsh:
