@@ -64,7 +64,7 @@ else
 endif
 
 gdb_cmd:
-	@echo "set print address on\nb $(E)\nr\nset logging file /tmp/gdb-log \nset logging overwrite on\nset logging redirect off\nset logging on\nx/$(NN)bx $(E)\nset logging off" > gdb_cmd
+	@echo "set print address on\nb $(E)\nr\nset logging file /tmp/gdb-log \nset logging overwrite on\nset logging redirect off\nset logging on\nx/$(NN)bx" '$$eip' "\nset logging off" > gdb_cmd
 
 a: $(AUTO)
 $(AUTO): $(SHELLCODE) gdb_cmd
