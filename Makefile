@@ -129,7 +129,7 @@ ifeq ($(ARCH), 64)
 else
 	@echo '#define WORD int /* 32 bits */\n' > $@
 endif
-	@python shc_cleaner.py "`cat $<`" >> $@
+	@python -c 'import sys; print "char shellcode[] =\n \"" + "".join([sys.argv[1][k], "\\", ""][2 * int(sys.argv[1][k] == " " or sys.argv[1][k] == "\t" or sys.argv[1][k] == "\n") + int(sys.argv[1][k] == "0" and sys.argv[1][(k+1) % len(sys.argv[1])] == "x")] for k in range(len(sys.argv[1]))) + "\";"' "`cat $<`" >> $@
 	@echo '\nint main() {\n  WORD* ret;\n  ret = (WORD *) &ret + 2; /* Saved IP */\n  *ret = (WORD) shellcode;\n  return 0;\n}' >> $(AUTO).c
 
 $(AUTO): $(AUTO).c
@@ -144,7 +144,7 @@ $(OBJDUMP): $(BIN).o
 
 hexdump: $(OBJDUMP) $(BIN).hex
 	@echo " "
-	@python shc_cleaner.py "`cat $(BIN).hex`"
+	@python -c 'import sys; print "char shellcode[] =\n \"" + "".join([sys.argv[1][k], "\\", ""][2 * int(sys.argv[1][k] == " " or sys.argv[1][k] == "\t" or sys.argv[1][k] == "\n") + int(sys.argv[1][k] == "0" and sys.argv[1][(k+1) % len(sys.argv[1])] == "x")] for k in range(len(sys.argv[1]))) + "\";"' "`cat $(BIN).hex`"
 	@echo " "
 
 p: print # an alias #
