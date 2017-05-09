@@ -1,4 +1,7 @@
 # Shellcode Factory tool
+A tool to print and test shellcodes from assembly code. 
+
+It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively), as well as x86 and x64 architectures.
 
 ## Usage:
 
@@ -30,12 +33,12 @@
 
 + `ARCH=XX`  (default=32)		XX-bit binaries (32 / 64)
 
-+ `S=filename`  (default=_shellcode.s_)	Source assembly filename
++ `S=filename`  (default=_shellcode.s_)	Source assembly filename.
 
 ### Examples:
 + `make print S=foo.s` will print the shellcode from _foo.s_
 
-+ `make auto ARCH=64` will test the x64 shellcode starting at main
++ `make ARCH=64 auto` will test the x64 shellcode starting at main
 
 ## Requires: 
 1. `gcc` (`as` frontend) and `nasm` for GAS and INTEL syntax respectively (extensions _.s_ and _.asm_)
