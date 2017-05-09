@@ -43,7 +43,7 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 ## Requires: 
 1. `gcc` (`as` frontend) and `nasm` for GAS and INTEL syntax respectively (extensions _.s_ and _.asm_)
 
-2. `gdb` (it could actually be replaced by `objdump` in this script, but it is still a *really* recommended tool to debug a shellcode)
+2. `gdb` 
 
 3. `python`
 
