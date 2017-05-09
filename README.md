@@ -2,7 +2,7 @@
 
 ## Usage:
 
-	`make targets [parameters]`
+	make targets [parameters]
  
 ### targets:
 
