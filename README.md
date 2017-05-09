@@ -10,7 +10,7 @@
 
 + `debug`			- debugs the assembly binary
 
-+ `print` / `xxd` / `p`		- will dump the contents of _shellcode.o_ in hex
++ `print` / `xxd` / `p`		- will print the shellcode in hex
 
 + `set`				- will call `nano shellcode.s`, to set the source assembly code
 
@@ -24,18 +24,18 @@
    loading those hex bytes into an auto-generated tester program (_auto.c_)  
    compiling and running that very program
 
-+  `debug_sc`	 	      	- debugs the shellcode when called from a smashed stack
++  `debug_sc`	 - debugs _auto_ i.e. the shellcode when called from a smashed stack
  
 ### parameters:
 
 + `ARCH=XX`  (default=32)		XX-bit binaries (32 / 64)
 
-+  `S=filename`  (default=_shellcode.s_)	Source assembly filename
++ `S=filename`  (default=_shellcode.s_)	Source assembly filename
 
 ### Examples:
 + `make print S=foo.s` will print the shellcode from _foo.s_
 
-+ `make auto ARCH=64 E=main` will test the x64 shellcode starting at main
++ `make auto ARCH=64` will test the x64 shellcode starting at main
 
 ## Requires: 
 1. `gcc` (`as` frontend) and `nasm` for GAS and INTEL syntax respectively (extensions _.s_ and _.asm_)
