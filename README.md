@@ -43,7 +43,7 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 ## Requires: 
 1. `gcc` (`as` frontend) and `nasm` for GAS and INTEL syntax respectively (extensions _.s_ and _.asm_)
 
-2. `gdb` 
+2. `gdb` (I even recommend using it with the `peda` enhancement: https://github.com/longld/peda)
 
 3. `python`
 
