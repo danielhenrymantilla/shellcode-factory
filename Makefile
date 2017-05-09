@@ -71,7 +71,7 @@ endif
 
 $(BIN).hex: $(BIN).o
 	@objdump -d $< # Optional -
-	@gdb -n -batch -ex "x/`gdb -n -batch -ex "p \`gdb -n -batch -ex "info file" $< | grep .text | cut -d "i" -f 1\`" | cut -d "-" -f 2`bx _start" $< | cut -d ":" -f 2 > $@
+	@gdb -n -batch -ex "x/`gdb -n -batch -ex "p \`gdb -n -batch -ex "info file" $< | grep .text | cut -d "i" -f 1\`" | cut -d "-" -f 2`bx $(E)" $< | cut -d ":" -f 2 > $@
 
 a: $(AUTO)
 $(AUTO): $(BIN).hex
