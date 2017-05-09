@@ -37,7 +37,7 @@ VULNFLAGS=-fno-stack-protector -z execstack
 
 ## COMMANDS ##
 .PHONY: all help usage p print hexdump xxd help put clean a \
-	$(ASSEMBLY) $(DEBUG) $(DEBUG)_$(SC) $(SC)_$(DEBUG) $(BIN).hex
+	$(ASSEMBLY) $(DEBUG) $(DEBUG)_$(SC) $(SC)_$(DEBUG) $(BIN).o
 
 # Default rule is usage #
 all: usage
