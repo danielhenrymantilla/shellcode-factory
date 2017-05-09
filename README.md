@@ -8,6 +8,8 @@
 
 + `shellcode`			- will compile the assembly code from shellcode.s
 
++ `debug`			- debugs the assembly binary
+
 + `print` / `xxd` / `p`		- will dump the contents of _shellcode_ in hex
 
 + `set`				- will call `nano shellcode.s`, to set the source assembly code
@@ -21,17 +23,17 @@
    compiling _shellcode.s_ into hex bytes,  
    loading those hex bytes into an auto-generated tester program (_auto.c_)  
    compiling and running that very program
+
++  `debug_sc`	 	      	- debugs the shellcode when called from a smashed stack
  
 ### parameters:
 
 + `ARCH=XX`  (default=32)		XX-bit binaries (32 / 64)
 
-+  `SOURCE=file`  (default=_shellcode.s_)	Source assembly filename
-
-+ `E=XX`     (default=_\_start_)	Entry point of the assembly code (e.g. _main_)
++  `S=filename`  (default=_shellcode.s_)	Source assembly filename
 
 ### Examples:
-+ `make print BIN=foo` will print the shellcode from _foo.s_
++ `make print S=foo.s` will print the shellcode from _foo.s_
 
 + `make auto ARCH=64 E=main` will test the x64 shellcode starting at main
 
