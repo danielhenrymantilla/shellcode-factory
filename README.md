@@ -38,7 +38,7 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 ### Examples:
 + `make print S=foo.s` will print the shellcode from _foo.s_
 
-+ `make ARCH=64 auto` will test the x64 shellcode starting at main
++ `make ARCH=64 auto` will test x64 shellcode
 
 ## Requires: 
 1. `gcc` (`as` frontend) and `nasm` for GAS and INTEL syntax respectively (extensions _.s_ and _.asm_)
