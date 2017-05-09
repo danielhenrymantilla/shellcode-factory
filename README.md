@@ -6,11 +6,11 @@
  
 ### targets:
 
-+ `shellcode`			- will compile the assembly code from shellcode.s
++ `assembly`			- will compile the assembly code from shellcode.s
 
 + `debug`			- debugs the assembly binary
 
-+ `print` / `xxd` / `p`		- will dump the contents of _shellcode_ in hex
++ `print` / `xxd` / `p`		- will dump the contents of _shellcode.o_ in hex
 
 + `set`				- will call `nano shellcode.s`, to set the source assembly code
 
