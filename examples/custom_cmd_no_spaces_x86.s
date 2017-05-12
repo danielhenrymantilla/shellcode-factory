@@ -26,6 +26,7 @@ _start:
 	int $0x80
 cmd:
 	call back
-	.ascii "/bin/echo#hello#world!##"
+	.ascii "/bin/dash#-p"
+	.ascii "##"
 
 
