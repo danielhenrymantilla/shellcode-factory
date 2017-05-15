@@ -30,7 +30,7 @@ TESTER=tester
 AUTO=auto
 
 # Program to edit files with
-EDITOR=nano
+EDITOR=@nano
 
 # Compiler flags for a smashable-and-executable stack #
 VULNFLAGS=-fno-stack-protector -z execstack
