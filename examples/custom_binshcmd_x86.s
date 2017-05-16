@@ -13,8 +13,8 @@
 # 3: "cat .passwd"\
 # 4: "cat /etc/passwd && /etc/shallow"\
 
-# Total length of the shellcode = 59 + custom_cmd_length
-# Since 59 = 58 (prefix_length) + 1 (terminating char)
+# Total length of the shellcode = 56 + custom_cmd_length
+# Since 56 = 55 (prefix_length) + 1 (terminating char)
 
 	.set END, 0x23		# terminating char (e.g, '#')
 .text
