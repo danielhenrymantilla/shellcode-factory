@@ -5,9 +5,12 @@ ARCH=32
 
 # Assembly source file #
 S=shellcode.s
-SOURCE=$(S)
-BIN:=$(basename $(notdir $(SOURCE)))
-EXT:=$(suffix $(SOURCE))
+
+# Change to DISABLED to remove optional objdump requirement 
+OBJDUMP=ENABLED
+
+# Language to display the shellcode with (C/python) #
+LANG=C
 
 # Assembly binary filename (for debugging purposes) #
 ASSEMBLY=assembly
@@ -15,8 +18,8 @@ ASSEMBLY=assembly
 # Rule to debug the assembly binary #
 DEBUG=debug
 
-# Prefix and suffix of rules to debug the shellcode (smashed stack situation) #
-SC=sc
+# Input shellcode #
+SC=""
 
 # Entry point name: for instance, 'main' #
 # (Change this to prevent a warning when compiling
@@ -35,9 +38,14 @@ EDITOR=@nano
 # Compiler flags for a smashable-and-executable stack #
 VULNFLAGS=-fno-stack-protector -z execstack
 
+# Assembly source file (stripped) #
+SOURCE:=$(S)
+BIN:=$(basename $(notdir $(SOURCE)))
+EXT:=$(suffix $(SOURCE))
+
 ## COMMANDS ##
 .PHONY: all help usage p print hexdump xxd help put clean a \
-	$(ASSEMBLY) $(DEBUG) $(DEBUG)_$(SC) $(SC)_$(DEBUG) $(BIN).o
+	$(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o
 
 # Default rule is usage #
 all: usage
@@ -62,7 +70,7 @@ usage:
 	@echo \
 "   > loading those hex bytes into an auto-generated test program ('$(AUTO).c')"
 	@echo "   > compiling and running that very program"
-	@echo "  $(DEBUG)_$(SC)\t- debugs the shellcode when called from a smashed stack"
+	@echo "  $(DEBUG)_sc\t- debugs the shellcode when called from a smashed stack"
 	@echo " "
 	@echo "parameters:"
 	@echo "  ARCH=XX  (default=$(ARCH))\t\t\tXX-bit binaries (32 / 64)"
@@ -106,30 +114,40 @@ $(DEBUG): $(ASSEMBLY)
 	gdb -ex "start" $<
 
 # Debug the shellcode (smashed stack situation) #
-$(SC)_$(DEBUG): $(AUTO).c
+sc_$(DEBUG): $(AUTO).c
 	$(CC) -g -m$(ARCH) $(VULNFLAGS) -o $(AUTO) $<
-	gdb -ex "b *&shellcode" -ex "run" $(AUTO)
+	gdb -ex "b *&shellcode" -ex "disas &shellcode" -ex "run" $(AUTO)
 
-$(DEBUG)_$(SC): $(SC)_$(DEBUG) # an alias #
+$(DEBUG)_sc: sc_$(DEBUG) # an alias #
 
 # Dirty one-liner hacks to get start address and length of assembly code, #
 # to then be able to get the right hex bytes #
+ifeq ($(SC), "")
 $(BIN).hex: $(BIN).o
+ifeq ($(OBJDUMP), ENABLED)
 	@objdump -d $< # optional
+endif
 	@gdb -n -batch -ex "info file" $< | grep .text | cut -d "i" -f 1 > /tmp/_infofile_
 	@echo "\nTotal: `gdb -n -batch -ex "p \`cat /tmp/_infofile_\`" | cut -d "-" -f 2 > /tmp/_len_ && cat /tmp/_len_` bytes."
 	@gdb -n -batch -ex "x/`cat /tmp/_len_ && rm -f /tmp/_len_`bx `cat /tmp/_infofile_ | cut -d "-" -f 1 && rm -f /tmp/_infofile_`" $< | cut -d ":" -f 2 > $@
+else
+$(BIN).hex:
+	@python -c 'import sys; sys.stdout.write("$(SC)")' | xxd -i > $@
+endif
 
+$(BIN).xxd: $(BIN).hex
+	@python -c 'import sys; print "" + "".join([sys.argv[1][k], "\\", ""][2 * int(sys.argv[1][k] == " " or sys.argv[1][k] == "\t" or sys.argv[1][k] == "\n" or sys.argv[1][k] == ",") + int(sys.argv[1][k] == "0" and sys.argv[1][(k+1) % len(sys.argv[1])] == "x")] for k in range(len(sys.argv[1]))) + ""' "`cat $<`" > $@
 
 # Compile a vulnerable C program with the generated shellcode #
 # that gets executed when the program auto-smashes its saved IP #
-$(AUTO).c : $(BIN).hex
+$(AUTO).c : $(BIN).xxd
 ifeq ($(ARCH), 64)
 	@echo '#define WORD long /* 64 bits */\n' > $@
 else
 	@echo '#define WORD int /* 32 bits */\n' > $@
 endif
-	@python -c 'import sys; print "char shellcode[] =\n \"" + "".join([sys.argv[1][k], "\\", ""][2 * int(sys.argv[1][k] == " " or sys.argv[1][k] == "\t" or sys.argv[1][k] == "\n") + int(sys.argv[1][k] == "0" and sys.argv[1][(k+1) % len(sys.argv[1])] == "x")] for k in range(len(sys.argv[1]))) + "\";"' "`cat $<`" >> $@
+# We use escaped-characters syntax for python copy-paste compatibility
+	@echo "char shellcode[] =\n \"`cat $<`\";" >> $@
 	@echo '\nint main() {\n  WORD* ret;\n  ret = (WORD *) &ret + 2; /* Saved IP */\n  *ret = (WORD) shellcode;\n  return 0;\n}' >> $(AUTO).c
 
 $(AUTO): $(AUTO).c
@@ -140,11 +158,16 @@ $(AUTO): $(AUTO).c
 
 a: $(AUTO) # an alias #
 
-$(OBJDUMP): $(BIN).o
 
-hexdump: $(OBJDUMP) $(BIN).hex
+hexdump: $(BIN).xxd
 	@echo " "
-	@python -c 'import sys; print "char shellcode[] =\n \"" + "".join([sys.argv[1][k], "\\", ""][2 * int(sys.argv[1][k] == " " or sys.argv[1][k] == "\t" or sys.argv[1][k] == "\n") + int(sys.argv[1][k] == "0" and sys.argv[1][(k+1) % len(sys.argv[1])] == "x")] for k in range(len(sys.argv[1]))) + "\";"' "`cat $(BIN).hex`"
+ifeq ($(LANG), C)
+	@echo "char shellcode[] = {"
+	@python -c "import sys; sys.stdout.write(\"`cat $<`\")" | xxd -i
+	@echo "};"
+else
+	@echo "shellcode =\n \"`cat $<`\""
+endif
 	@echo " "
 
 p: print # an alias #
@@ -161,4 +184,5 @@ clean:
 	@rm -f *.o
 	@rm -f *~
 	@rm -f *.hex
+	@rm -f *.xxd
 	@ls

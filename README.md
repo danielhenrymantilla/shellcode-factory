@@ -35,10 +35,14 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 + `S=filename`  (default=_shellcode.s_)	Source assembly filename.
 
++ `SC="\x31\xc0..."`  (ignored by default)	Raw input shellcode (ignores `S` parameter).
+
 ### Examples:
 + `make print S=foo.s` will print the shellcode from _foo.s_
 
-+ `make ARCH=64 auto` will test x64 shellcode
++ `make S=foo.s set p a` will let you edit _foo.s_ and will then hexdump it and attempt to run it
+
++ `make sc_debug ARCH=64 SC="\x48\x31\xc0\x48\x31\xff\xb0\x3c\x0f\x05"` will debug x64 shellcode
 
 ## Requires: 
 1. `gcc` (`as` frontend) and `nasm` for GAS and INTEL syntax respectively (extensions _.s_ and _.asm_)
