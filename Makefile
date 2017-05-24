@@ -54,31 +54,6 @@ help: usage # an alias #
 
 usage:
 	@cat README.md
-#	@echo "Usage:\n\tmake targets [parameters]"
-#	@echo " "
-#	@echo "targets:"
-#	@echo "  $(ASSEMBLY)\t- compiles the assembly code from $(SOURCE)"
-#	@echo "  $(DEBUG)\t\t- debugs the assembly binary"
-#	@echo "  print/xxd/p\t- dumps the contents of '$(BIN)' in hex"
-#	@echo \
-#"  set\t\t- calls '$(EDITOR) $(SOURCE)', to set the source assembly code"
-#	@echo \
-#"  put\t\t- calls '$(EDITOR) $(TESTER).c', to put in it hex-encoded shellcode"
-#	@echo \
-#"  test\t\t- compiles '$(TESTER).c' and run it, thus testing the shellcode"
-#	@echo "  $(AUTO)/a\t- does all of the above in one single step:"
-#	@echo "   > compiling '$(SOURCE)' into hex bytes,"
-#	@echo \
-#"   > loading those hex bytes into an auto-generated test program ('$(AUTO).c')"
-#	@echo "   > compiling and running that very program"
-#	@echo "  $(DEBUG)_sc\t- debugs the shellcode when called from a smashed stack"
-#	@echo " "
-#	@echo "parameters:"
-#	@echo "  ARCH=XX  (default=$(ARCH))\t\t\tXX-bit binaries (32 / 64)"
-#	@echo "  S=filename  (default='$(SOURCE)')\tSource assembly filename"
-#	@echo \
-#"\nFor instance, 'make print S=foo.s' will print the shellcode from 'foo.s'"
-#	@echo "   and, 'make auto ARCH=64' will test x64 shellcode"
 
 set: $(SOURCE)
 	$(EDITOR) $<
@@ -182,7 +157,6 @@ hexdump: $(AUTO).c
 	@$(CC) -g -m$(ARCH) $(VULNFLAGS) -o $(AUTO) $<
 	@echo "Parsing input shellcode as assembly instructions:"
 	@objdump -D auto | grep -A `python -c 'print 3+len("$(SC)")/3'` shellcode | cut -d ":" -f 2
-#	@gdb -n -batch -ex "b *shellcode" -ex "r" -ex "disas shellcode" $(AUTO) | grep ":" | cut -d ":" -f 2
 endif
 
 p: print # an alias #
