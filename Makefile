@@ -6,11 +6,11 @@ ARCH=32
 # Assembly source file #
 S=shellcode.s
 
-# Change to DISABLED to remove optional objdump requirement 
+# Change to DISABLED to remove optional objdump requirement
 OBJDUMP=ENABLED
 
 # Language to display the shellcode with (C/python) #
-LANG=C
+LANG=python
 
 # Assembly binary filename (for debugging purposes) #
 ASSEMBLY=assembly
@@ -44,7 +44,7 @@ BIN:=$(basename $(notdir $(SOURCE)))
 EXT:=$(suffix $(SOURCE))
 
 ## COMMANDS ##
-.PHONY: all help usage p print hexdump xxd help put clean a \
+.PHONY: all help usage p print hexdump xxd help put clean a $(AUTO)\
 	$(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o
 
 # Default rule is usage #
@@ -53,31 +53,32 @@ all: usage
 help: usage # an alias #
 
 usage:
-	@echo "Usage:\n\tmake targets [parameters]"
-	@echo " "
-	@echo "targets:"
-	@echo "  $(ASSEMBLY)\t- compiles the assembly code from $(SOURCE)"
-	@echo "  $(DEBUG)\t\t- debugs the assembly binary"
-	@echo "  print/xxd/p\t- dumps the contents of '$(BIN)' in hex"
-	@echo \
-"  set\t\t- calls '$(EDITOR) $(SOURCE)', to set the source assembly code"
-	@echo \
-"  put\t\t- calls '$(EDITOR) $(TESTER).c', to put in it hex-encoded shellcode"
-	@echo \
-"  test\t\t- compiles '$(TESTER).c' and run it, thus testing the shellcode"
-	@echo "  $(AUTO)/a\t- does all of the above in one single step:"
-	@echo "   > compiling '$(SOURCE)' into hex bytes,"
-	@echo \
-"   > loading those hex bytes into an auto-generated test program ('$(AUTO).c')"
-	@echo "   > compiling and running that very program"
-	@echo "  $(DEBUG)_sc\t- debugs the shellcode when called from a smashed stack"
-	@echo " "
-	@echo "parameters:"
-	@echo "  ARCH=XX  (default=$(ARCH))\t\t\tXX-bit binaries (32 / 64)"
-	@echo "  S=filename  (default='$(SOURCE)')\tSource assembly filename"
-	@echo \
-"\nFor instance, 'make print S=foo.s' will print the shellcode from 'foo.s'"
-	@echo "   and, 'make auto ARCH=64' will test x64 shellcode"
+	@cat README.md
+#	@echo "Usage:\n\tmake targets [parameters]"
+#	@echo " "
+#	@echo "targets:"
+#	@echo "  $(ASSEMBLY)\t- compiles the assembly code from $(SOURCE)"
+#	@echo "  $(DEBUG)\t\t- debugs the assembly binary"
+#	@echo "  print/xxd/p\t- dumps the contents of '$(BIN)' in hex"
+#	@echo \
+#"  set\t\t- calls '$(EDITOR) $(SOURCE)', to set the source assembly code"
+#	@echo \
+#"  put\t\t- calls '$(EDITOR) $(TESTER).c', to put in it hex-encoded shellcode"
+#	@echo \
+#"  test\t\t- compiles '$(TESTER).c' and run it, thus testing the shellcode"
+#	@echo "  $(AUTO)/a\t- does all of the above in one single step:"
+#	@echo "   > compiling '$(SOURCE)' into hex bytes,"
+#	@echo \
+#"   > loading those hex bytes into an auto-generated test program ('$(AUTO).c')"
+#	@echo "   > compiling and running that very program"
+#	@echo "  $(DEBUG)_sc\t- debugs the shellcode when called from a smashed stack"
+#	@echo " "
+#	@echo "parameters:"
+#	@echo "  ARCH=XX  (default=$(ARCH))\t\t\tXX-bit binaries (32 / 64)"
+#	@echo "  S=filename  (default='$(SOURCE)')\tSource assembly filename"
+#	@echo \
+#"\nFor instance, 'make print S=foo.s' will print the shellcode from 'foo.s'"
+#	@echo "   and, 'make auto ARCH=64' will test x64 shellcode"
 
 set: $(SOURCE)
 	$(EDITOR) $<
@@ -110,8 +111,15 @@ $(ASSEMBLY): $(BIN).o
 	$(CC) -m$(ARCH) -nostdlib -o $@ $< -e$(E)
 
 # Debug it #
+ifneq ($(SC), "")
+$(DEBUG):
+	@echo "Error, '$(DEBUG)' rule cannot be used in conjunction with 'SC' input."
+	@echo "Use 'sc_$(DEBUG)' instead."
+	@false
+else
 $(DEBUG): $(ASSEMBLY)
 	gdb -ex "start" $<
+endif
 
 # Debug the shellcode (smashed stack situation) #
 sc_$(DEBUG): $(AUTO).c
@@ -158,7 +166,7 @@ $(AUTO): $(AUTO).c
 
 a: $(AUTO) # an alias #
 
-
+ifeq ($(SC), "")
 hexdump: $(BIN).xxd
 	@echo " "
 ifeq ($(LANG), C)
@@ -169,6 +177,13 @@ else
 	@echo "shellcode =\n \"`cat $<`\""
 endif
 	@echo " "
+else
+hexdump: $(AUTO).c
+	@$(CC) -g -m$(ARCH) $(VULNFLAGS) -o $(AUTO) $<
+	@echo "Parsing input shellcode as assembly instructions:"
+	@objdump -D auto | grep -A `python -c 'print 3+len("$(SC)")/3'` shellcode | cut -d ":" -f 2
+#	@gdb -n -batch -ex "b *shellcode" -ex "r" -ex "disas shellcode" $(AUTO) | grep ":" | cut -d ":" -f 2
+endif
 
 p: print # an alias #
 
@@ -186,3 +201,7 @@ clean:
 	@rm -f *.hex
 	@rm -f *.xxd
 	@ls
+
+%:
+	@echo "No rule to make target '$@'"
+	@false

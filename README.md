@@ -3,9 +3,11 @@ A tool to print and test shellcodes from assembly code.
 
 It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively), as well as x86 and x64 architectures.
 
+
 ## Usage:
 
 	make targets [parameters]
+
  
 ### targets:
 
@@ -28,6 +30,9 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
    compiling and running that very program
 
 +  `debug_sc`	 - debugs _auto_ i.e. the shellcode when called from a smashed stack
+
++  `clean`			- removes any non-source file at `.`
+
  
 ### parameters:
 
@@ -35,24 +40,30 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 + `S=filename`  (default=_shellcode.s_)	Source assembly filename.
 
-+ `SC="\x31\xc0..."`  (ignored by default)	Raw input shellcode (ignores `S` parameter).
++ `SC="\x31\xc0..."`  (ignored by default) Input shellcode (overrides `S` parameter).
+
 
 ### Examples:
-+ `make print S=foo.s` will print the shellcode from _foo.s_
 
-+ `make S=foo.s set p a` will let you edit _foo.s_ and will then hexdump it and attempt to run it
++ `make print S=foo.s LANG=C` will print/hexdump the shellcode from _foo.s_ with C syntax
 
-+ `make sc_debug ARCH=64 SC="\x48\x31\xc0\x48\x31\xff\xb0\x3c\x0f\x05"` will debug x64 shellcode
++ `make S=foo.s set p a ARCH=64` will let you edit _foo.s_ and will then hexdump it and attempt to run it (x64)
+
++ `make print SC="\x31\xc0\x40\xcd\x80"` will parse input shellcode into assembly instructions
+
++ `make sc_debug SC="\x31\xc0\x40\xcd\x80"` will debug input shellcode
+
 
 ## Requires: 
+
 1. `gcc` (`as` frontend) and `nasm` for GAS and INTEL syntax respectively (extensions _.s_ and _.asm_)
 
-2. `gdb` (I even recommend using it with the `peda` enhancement: https://github.com/longld/peda)
+2. `gdb` (I also recommend enhancing it with `peda`: https://github.com/longld/peda)
 
-3. `python`
+3. `python` (tested with 2.7.12)
 
 4. `cut`
 
-5. `objdump` (optional: you can comment out the objdump lines in the _Makefile_)
+5. `objdump` (optional: you can set `OBJDUMP` to `DISABLED` in the _Makefile_)
 
 6. `nano` (optional: `set` and `put` targets only, and you can replace the `EDITOR=...` line in the _Makefile_ by your own editor)
