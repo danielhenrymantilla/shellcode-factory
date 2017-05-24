@@ -39,7 +39,11 @@ EDITOR=@nano
 VULNFLAGS=-fno-stack-protector -z execstack
 
 # Assembly source file (stripped) #
+ifeq ($(SC), "")
 SOURCE:=$(S)
+else
+SOURCE:=._raw_.s
+endif
 BIN:=$(basename $(notdir $(SOURCE)))
 EXT:=$(suffix $(SOURCE))
 
@@ -86,15 +90,8 @@ $(ASSEMBLY): $(BIN).o
 	$(CC) -m$(ARCH) -nostdlib -o $@ $< -e$(E)
 
 # Debug it #
-ifneq ($(SC), "")
-$(DEBUG):
-	@echo "Error, '$(DEBUG)' rule cannot be used in conjunction with 'SC' input."
-	@echo "Use 'sc_$(DEBUG)' instead."
-	@false
-else
 $(DEBUG): $(ASSEMBLY)
 	gdb -ex "start" $<
-endif
 
 # Debug the shellcode (smashed stack situation) #
 sc_$(DEBUG): $(AUTO).c
@@ -105,7 +102,6 @@ $(DEBUG)_sc: sc_$(DEBUG) # an alias #
 
 # Dirty one-liner hacks to get start address and length of assembly code, #
 # to then be able to get the right hex bytes #
-ifeq ($(SC), "")
 $(BIN).hex: $(BIN).o
 ifeq ($(OBJDUMP), ENABLED)
 	@objdump -d $< # optional
@@ -113,10 +109,6 @@ endif
 	@gdb -n -batch -ex "info file" $< | grep .text | cut -d "i" -f 1 > /tmp/_infofile_
 	@echo "\nTotal: `gdb -n -batch -ex "p \`cat /tmp/_infofile_\`" | cut -d "-" -f 2 > /tmp/_len_ && cat /tmp/_len_` bytes."
 	@gdb -n -batch -ex "x/`cat /tmp/_len_ && rm -f /tmp/_len_`bx `cat /tmp/_infofile_ | cut -d "-" -f 1 && rm -f /tmp/_infofile_`" $< | cut -d ":" -f 2 > $@
-else
-$(BIN).hex:
-	@python -c 'import sys; sys.stdout.write("$(SC)")' | xxd -i > $@
-endif
 
 $(BIN).xxd: $(BIN).hex
 	@python -c 'import sys; print "" + "".join([sys.argv[1][k], "\\", ""][2 * int(sys.argv[1][k] == " " or sys.argv[1][k] == "\t" or sys.argv[1][k] == "\n" or sys.argv[1][k] == ",") + int(sys.argv[1][k] == "0" and sys.argv[1][(k+1) % len(sys.argv[1])] == "x")] for k in range(len(sys.argv[1]))) + ""' "`cat $<`" > $@
@@ -141,7 +133,6 @@ $(AUTO): $(AUTO).c
 
 a: $(AUTO) # an alias #
 
-ifeq ($(SC), "")
 hexdump: $(BIN).xxd
 	@echo " "
 ifeq ($(LANG), C)
@@ -152,12 +143,6 @@ else
 	@echo "shellcode =\n \"`cat $<`\""
 endif
 	@echo " "
-else
-hexdump: $(AUTO).c
-	@$(CC) -g -m$(ARCH) $(VULNFLAGS) -o $(AUTO) $<
-	@echo "Parsing input shellcode as assembly instructions:"
-	@objdump -D auto | grep -A `python -c 'print 3+len("$(SC)")/3'` shellcode | cut -d ":" -f 2
-endif
 
 p: print # an alias #
 
@@ -168,6 +153,7 @@ xxd: hexdump # an alias #
 clean:
 	@rm -f $(ASSEMBLY) $(TESTER)
 	@rm -f $(AUTO)*
+	@rm -f ._raw_.*
 	@rm -f /tmp/_len_
 	@rm -f /tmp/_infofile_
 	@rm -f *.o
@@ -175,6 +161,9 @@ clean:
 	@rm -f *.hex
 	@rm -f *.xxd
 	@ls
+
+._raw_.s:
+	@echo ".text\n.globl _start\n_start:\n\t.ascii \"$(SC)\"" > $@
 
 %:
 	@echo "No rule to make target '$@'"
