@@ -48,7 +48,7 @@ BIN:=$(basename $(notdir $(SOURCE)))
 EXT:=$(suffix $(SOURCE))
 
 ## COMMANDS ##
-.PHONY: all help usage p print hexdump xxd help put clean a $(AUTO)\
+.PHONY: all help usage p print hexdump xxd help put c clean a $(AUTO)\
 	$(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o
 
 # Default rule is usage #
@@ -57,7 +57,7 @@ all: usage
 help: usage # an alias #
 
 usage:
-	@cat README.md
+	@less README.md
 
 set: $(SOURCE)
 	$(EDITOR) $<
@@ -105,6 +105,8 @@ $(DEBUG)_sc: sc_$(DEBUG) # an alias #
 $(BIN).hex: $(BIN).o
 ifeq ($(OBJDUMP), ENABLED)
 	@objdump -d $< # optional
+else
+	@gdb -n -batch -ex "x/1500i _start" $<
 endif
 	@gdb -n -batch -ex "info file" $< | grep .text | cut -d "i" -f 1 > /tmp/_infofile_
 	@echo "\nTotal: `gdb -n -batch -ex "p \`cat /tmp/_infofile_\`" | cut -d "-" -f 2 > /tmp/_len_ && cat /tmp/_len_` bytes."
@@ -150,7 +152,10 @@ print: hexdump # an alias #
 
 xxd: hexdump # an alias #
 
-clean:
+clean: c # an alias #
+	@ls
+
+c:
 	@rm -f $(ASSEMBLY) $(TESTER)
 	@rm -f $(AUTO)*
 	@rm -f ._raw_.*
@@ -160,7 +165,6 @@ clean:
 	@rm -f *~
 	@rm -f *.hex
 	@rm -f *.xxd
-	@ls
 
 ._raw_.s:
 	@echo ".text\n.globl _start\n_start:\n\t.ascii \"$(SC)\"" > $@

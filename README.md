@@ -31,7 +31,7 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 +  `debug_sc`	 - debugs _auto_ i.e. the shellcode when called from a smashed stack
 
-+  `clean`			- removes any non-source file at `.`
++  `clean` / `c`		- removes any non-source file at `.`
 
  
 ### parameters:
@@ -51,8 +51,9 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 + `make print SC="\x31\xc0\x40\xcd\x80"` will parse input shellcode into assembly instructions
 
-+ `make sc_debug SC="\x31\xc0\x40\xcd\x80"` will debug input shellcode
++ `make c p sc_debug SC="\x31\xc0\x40\xcd\x80"` will clean (recommended) then print and debug input shellcode
 
++ `make print S=foo.asm | grep 00` is a useful trick to check for forbidden bytes (byte 00 for instance)
 
 ## Requires: 
 
