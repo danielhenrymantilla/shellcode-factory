@@ -1,6 +1,8 @@
 .set PORT, 0x9210	# i.e. port = 4242
 # to convert from a decimal port, you may use:
-# python -c 'import struct;print "0x"+struct.pack("<H", 4242).encode("hex")'
+# $ python -c 'import struct,sys;print "0x"+struct.pack("<H", int(sys.argv[1])).encode("hex")' 4242
+# or:
+# $ python -c 'import struct;print "0x"+struct.pack("<H", 4242).encode("hex")'
 
 	# Assembly code heavily inspired from
 	# https://gist.github.com/geyslan/5174296
