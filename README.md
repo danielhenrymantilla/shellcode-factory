@@ -45,6 +45,8 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 + `SC="\x31\xc0..."`  (ignored by default) Input shellcode (overrides `S` parameter).
 
++ `NO="[0x00, ...]"` (default=[0x00]) List of 'forbidden' chars, i.e., chars to avoid when xor-ing
+
 
 ### Examples:
 
