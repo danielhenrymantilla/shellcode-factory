@@ -31,6 +31,9 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 +  `debug_sc`	 - debugs _auto_ i.e. the shellcode when called from a smashed stack
 
++  `xor`	 - xors the shellcode with a random byte, and prepends to it an appropriate decoder
+(the decoder is 20-ish bytes long). It will try to avoid generating null bytes.
+
 +  `clean` / `c`		- removes any non-source file at `.`
 
  
