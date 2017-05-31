@@ -32,7 +32,7 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 +  `debug_sc`	 - debugs _auto_ i.e. the shellcode when called from a smashed stack
 
 +  `xor`	 - xors the shellcode with a random byte, and prepends to it an appropriate decoder
-(the decoder is 20-ish bytes long). It will try to avoid generating null bytes.
+(the decoder is 20-ish bytes long). It will try to avoid the bytes from the _NO_ parameter.
 
 +  `clean` / `c`		- removes any non-source file at `.`
 
@@ -45,7 +45,7 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 + `SC="\x31\xc0..."`  (ignored by default) Input shellcode (overrides `S` parameter).
 
-+ `NO="[0x00, ...]"` (default=[0x00]) List of 'forbidden' chars, i.e., chars to avoid when xor-ing
++ `NO="[0x...]"` (default="[0x00, 0x20, 0x9, 0xa]") List of chars to avoid when xor-ing
 
 
 ### Examples:
@@ -58,7 +58,8 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 + `make c p sc_debug SC="\x31\xc0\x40\xcd\x80"` will clean (recommended) then print and debug input shellcode
 
-+ `make print S=foo.asm | grep 00` is a useful trick to check for forbidden bytes (byte 00 for instance)
++ `make print S=foo.asm | grep -e x00 -e x20` is a useful trick to check for forbidden bytes (bytes 0x00 and 0x20 for instance)
+
 
 ## Requires: 
 
@@ -73,3 +74,5 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 5. `objdump` (optional: you can set `OBJDUMP` to `DISABLED` in the _Makefile_)
 
 6. `nano` (optional: `set` and `put` targets only, and you can replace the `EDITOR=...` line in the _Makefile_ by your own editor)
+
+7. _GNU_ `make` of course

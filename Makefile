@@ -22,7 +22,7 @@ DEBUG=debug
 SC=""
 
 # List of forbidden chars (xor command) #
-NO=[0x00]
+NO=[0x00, 0x20, 0xa, 0x9] # No null chars nor whitespaces
 
 # Entry point name: for instance, 'main' #
 # (Change this to prevent a warning when compiling
@@ -159,13 +159,21 @@ print: hexdump # an alias #
 xxd: hexdump # an alias #
 
 ._xor_.py: $(BIN).xxd
-	@echo "import os" > $@
+	@echo "import os\n" > $@
+	@echo 'def decoder(l, char):' >> $@
+	@echo '\t' >> $@
+	@echo '\t' >> $@
+	@echo '\tif l > 0xff:\n\t\tfrom struct import pack;set_ecx = "\x66\xb9" + pack("<H", l)\n\telse:\n\t\tset_ecx = "\xb1" + chr(l)' >> $@
+	@/bin/echo -ne '\treturn ' >> $@
+ifeq ($(ARCH), 64)
+	@/bin/echo -n '"\x48" + ' >> $@
+endif
+	@echo '"\x31\xc9" + set_ecx + "\xeb\x0b\x90\x5e\x80\x74\x0e\xff" + char + "\xe2\xf9\xeb\x05\xe8\xf1\xff\xff\xff"\n' >> $@
 	@echo "sc = \"`cat $<`\"" >> $@
 	@echo 'l = len(sc)' >> $@
-	@echo 'if l > 0xff:\n\tfrom struct import pack;set_ecx = "\x66\xb9" + pack("<H", l)\nelse:\n\tset_ecx = "\xb1" + chr(l)' >> $@
 	@echo 'forbidden_chars = []' >> $@
 	@echo 'for c in $(NO):' >> $@
-	@echo '\tif chr(c) in "\x31\xc9" + set_ecx + "\xeb\x0a\x5e\x80\x74\x0e\xff\xe2\xf9\xeb\x05\xe8\xf1\xff\xff\xff":' >> $@
+	@echo '\tif chr(c) in decoder(l, ""):' >> $@
 	@echo '\t\tprint "xor: Warning, char " + hex(c) + " cannot be avoided because it is present in the prepended decoder"' >> $@
 	@echo '\telse:' >> $@
 	@echo '\t\tforbidden_chars.append(c)' >> $@
@@ -175,11 +183,8 @@ xxd: hexdump # an alias #
 	@echo '\tfor c in forbidden_chars:' >> $@
 	@echo '\t\tif chr(rb ^ c) in sc:\n\t\t\tloop = True' >> $@
 	@echo 'if loop:\n\tprint "xor: Failed to satisfy forbidden chars constraint"' >> $@
-	@echo 'xor_sc = "\x31\xc9" + set_ecx + "\xeb\x0a\x5e\x80\x74\x0e\xff" + chr(rb) + "\xe2\xf9\xeb\x05\xe8\xf1\xff\xff\xff"' >> $@
+	@echo 'xor_sc = decoder(l, chr(rb))' >> $@
 	@echo 'xor_sc += "".join(chr(ord(c) ^ rb) for c in sc)' >> $@
-ifeq ($(ARCH), 64)
-	@echo 'xor_sc = "\x48" + xor_sc' >> $@
-endif
 	@echo 'print "xor-ed with byte " + hex(rb) + ":"' >> $@
 	@echo 'print "\"" + "".join("\\\\x" + c.encode("hex") for c in xor_sc) + "\""' >> $@
 	@echo 'print "Total length: " + str(len(xor_sc)) + " bytes."' >> $@
