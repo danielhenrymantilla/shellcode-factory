@@ -1,3 +1,5 @@
+# Dummy (and suboptimal) example of shell invocation with sys_execve("/bin/sh", NULL, NULL) #
+
 .text
 .globl _start
 _start:
