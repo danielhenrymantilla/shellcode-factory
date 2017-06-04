@@ -165,7 +165,7 @@ xxd: hexdump # an alias #
 neg.py:
 	@echo 'import sys' > $@
 	@echo '\ndef decoder(arch):' >> $@
-	@echo '\tif arch != 32:\n\t\tprint "mask: Error, not implemented yet"\n\t\tsys.exit(1)' >> $@
+	@echo '\tif arch != 32:\n\t\tprint "neg: Error, not implemented yet"\n\t\tsys.exit(1)' >> $@
 	@echo '\treturn "\x8b\x74\x24\xfc\x83\xc6\x0b\x46\xf6\x1e\x75\xfb"' >> $@
 	@echo '\nargc = len(sys.argv) - 1\nif argc != 1 and argc != 2:\n\tprint "Usage:\\n\\tpython " + sys.argv[0] + " \\\\x..\\\\x... " + "ARCH"\n\tsys.exit(1)' >> $@
 	@echo '\nsc = "".join(["", c][int(c != "\\\\" and c != "x")] for c in sys.argv[1]).decode("hex")' >> $@
