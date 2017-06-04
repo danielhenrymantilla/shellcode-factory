@@ -51,8 +51,8 @@ BIN:=$(basename $(notdir $(SOURCE)))
 EXT:=$(suffix $(SOURCE))
 
 ## COMMANDS ##
-.PHONY: all help usage p print hexdump xxd help put c clean a $(AUTO)\
-	$(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o xor
+.PHONY: all help usage p print hexdump xxd help put c distr_clean clean a $(AUTO)\
+	$(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o install xor neg
 
 # Default rule is usage #
 all: usage
@@ -61,6 +61,8 @@ help: usage # an alias #
 
 usage:
 	@less README.md
+
+install: xor.py neg.py
 
 set: $(SOURCE)
 	$(EDITOR) $<
@@ -75,10 +77,10 @@ $(TESTER): $(TESTER).c
 	$(CC) -m$(ARCH) -g $(VULNFLAGS) -o $@ $<
 
 
-# Compile the assembly as an object file (to extracting its hex data) #
+# Compile the assembly as an object file (to extract its hex data) #
 $(BIN).o: $(SOURCE)
 ifneq ($(EXT), .asm)
-	$(CC) -m$(ARCH) -nostdlib -o $@ -c $<
+	$(CC) -m$(ARCH) -nostdlib -Wa,--defsym,ARCH=$(ARCH) -o $@ -c $<
 else
 ifeq ($(ARCH), 64)
 	nasm -f elf64 -o $@ $<
@@ -158,40 +160,61 @@ print: hexdump # an alias #
 
 xxd: hexdump # an alias #
 
-._xor_.py: $(BIN).xxd
-	@echo "import os\n" > $@
-	@echo 'def decoder(l, char):' >> $@
-	@echo '\t' >> $@
-	@echo '\t' >> $@
-	@echo '\tif l > 0xff:\n\t\tfrom struct import pack;set_ecx = "\x66\xb9" + pack("<H", l)\n\telse:\n\t\tset_ecx = "\xb1" + chr(l)' >> $@
-	@/bin/echo -ne '\treturn ' >> $@
-ifeq ($(ARCH), 64)
-	@/bin/echo -n '"\x48" + ' >> $@
-endif
-	@echo '"\x31\xc9" + set_ecx + "\xeb\x0b\x90\x5e\x80\x74\x0e\xff" + char + "\xe2\xf9\xeb\x05\xe8\xf1\xff\xff\xff"\n' >> $@
-	@echo "sc = \"`cat $<`\"" >> $@
+
+# Python script to negate a shellcode and prepend the decoder #
+neg.py:
+	@echo 'import sys' > $@
+	@echo '\ndef decoder(arch):' >> $@
+	@echo '\tif arch != 32:\n\t\tprint "mask: Error, not implemented yet"\n\t\tsys.exit(1)' >> $@
+	@echo '\treturn "\x8b\x74\x24\xfc\x83\xc6\x0b\x46\xf6\x1e\x75\xfb"' >> $@
+	@echo '\nargc = len(sys.argv) - 1\nif argc != 1 and argc != 2:\n\tprint "Usage:\\n\\tpython " + sys.argv[0] + " \\\\x..\\\\x... " + "ARCH"\n\tsys.exit(1)' >> $@
+	@echo '\nsc = "".join(["", c][int(c != "\\\\" and c != "x")] for c in sys.argv[1]).decode("hex")' >> $@
+	@echo 'ARCH = int(sys.argv[2])' >> $@
+	@echo '\nnegated_code = ""' >> $@
+	@echo 'for k in range(len(sc)):' >> $@
+	@echo '\tif ord(sc[k]) == 0:\n\t\tnegated_code += sc[k:]\n\t\tbreak' >> $@
+	@echo '\tnegated_code += chr(256 - ord(sc[k]))' >> $@
+	@echo '\nneg_sc = decoder(ARCH) + negated_code' >> $@
+	@echo 'print "masked_shellcode =\\n\"" + "".join("\\\\x" + c.encode("hex") for c in neg_sc) + "\""' >> $@
+	@echo 'print "Total length: " + str(len(neg_sc)) + " bytes."' >> $@
+
+neg: neg.py $(BIN).xxd
+	@echo " "
+	@python neg.py "`cat $(BIN).xxd`" $(ARCH)
+
+
+# Python script to xor a shellcode (with a random byte) and preprend the decoder #
+xor.py:
+	@echo 'import os, sys' >> $@
+	@echo '\ndef decoder(l, char, arch):' >> $@
+	@echo '\tif l > 0x100:\n\t\tfrom struct import pack;set_ecx = ["", "\x48"][int(arch == 64)] + "\x31\xc9\x66\xb9" + pack("<H", l)\n\telse:\n\t\tset_ecx = "\x6a" + chr(l) + "\x59"' >> $@
+	@echo '\treturn set_ecx + "\xeb\x0b\x90\x5e\x80\x74\x0e\xff" + char + "\xe2\xf9\xeb\x05\xe8\xf1\xff\xff\xff"\n' >> $@
+	@echo '\nargc = len(sys.argv) - 1\nif argc != 1 and argc != 2:\n\tprint "Usage:\\n\\tpython " + sys.argv[0] + " \\\\x..\\\\x... " + "ARCH"\n\tsys.exit(1)' >> $@
+	@echo '\nsc = "".join(["", c][int(c != "\\\\" and c != "x")] for c in sys.argv[1]).decode("hex")' >> $@
 	@echo 'l = len(sc)' >> $@
-	@echo 'forbidden_chars = []' >> $@
+	@echo 'ARCH = int(sys.argv[2])' >> $@
+	@echo '\nforbidden_chars = []' >> $@
 	@echo 'for c in $(NO):' >> $@
-	@echo '\tif chr(c) in decoder(l, ""):' >> $@
-	@echo '\t\tprint "xor: Warning, char " + hex(c) + " cannot be avoided because it is present in the prepended decoder"' >> $@
+	@echo '\tif chr(c) in decoder(l, "", ARCH):' >> $@
+	@echo '\t\tprint "xor: Warning, char " + hex(c) + " cannot be avoided since it is present in the prepended decoder"' >> $@
 	@echo '\telse:' >> $@
 	@echo '\t\tforbidden_chars.append(c)' >> $@
-	@echo 'i = 0\nloop = True\nwhile(loop and i < 100000):' >> $@
+	@echo '\ni = 0\nloop = True\nwhile(loop and i < 100000):' >> $@
 	@echo '\ti += 1\n\tloop = False\n\trb = ord(os.urandom(1))' >> $@
 	@echo '\tif rb in forbidden_chars:\n\t\tloop = True' >> $@
 	@echo '\tfor c in forbidden_chars:' >> $@
 	@echo '\t\tif chr(rb ^ c) in sc:\n\t\t\tloop = True' >> $@
 	@echo 'if loop:\n\tprint "xor: Failed to satisfy forbidden chars constraint"' >> $@
-	@echo 'xor_sc = decoder(l, chr(rb))' >> $@
+	@echo '\nxor_sc = decoder(l, chr(rb), ARCH)' >> $@
 	@echo 'xor_sc += "".join(chr(ord(c) ^ rb) for c in sc)' >> $@
 	@echo 'print "xor-ed with byte " + hex(rb) + ":"' >> $@
 	@echo 'print "\"" + "".join("\\\\x" + c.encode("hex") for c in xor_sc) + "\""' >> $@
 	@echo 'print "Total length: " + str(len(xor_sc)) + " bytes."' >> $@
 
-xor: ._xor_.py
+xor: xor.py $(BIN).xxd
 	@echo " "
-	@python $<
+	@python xor.py "`cat $(BIN).xxd`" $(ARCH)
+
 
 clean: c # an alias #
 	@ls
@@ -200,13 +223,17 @@ c:
 	@rm -f $(ASSEMBLY) $(TESTER)
 	@rm -f $(AUTO)*
 	@rm -f ._raw_.*
-	@rm -f ._xor_.*
 	@rm -f /tmp/_len_
 	@rm -f /tmp/_infofile_
 	@rm -f *.o
 	@rm -f *~
 	@rm -f *.hex
 	@rm -f *.xxd
+
+distr_clean: c
+	@rm -f xor.py
+	@rm -f neg.py
+	@ls
 
 ._raw_.s:
 	@echo ".text\n.globl _start\n_start:\n\t.ascii \"$(SC)\"" > $@

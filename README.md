@@ -31,8 +31,10 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 +  `debug_sc`	 - debugs _auto_ i.e. the shellcode when called from a smashed stack
 
++  `neg`	 - negates the shellcode, and prepends to it a 12-bytes-long decoder. It assumes the shellcode is reached from a smashed stack
+
 +  `xor`	 - xors the shellcode with a random byte, and prepends to it an appropriate decoder
-(the decoder is 20-ish bytes long). It will try to avoid the bytes from the _NO_ parameter.
+(the decoder is 21-25 bytes long). It will try to avoid the bytes from the _NO_ parameter.
 
 +  `clean` / `c`		- removes any non-source file at `.`
 
@@ -58,7 +60,9 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 + `make c p sc_debug SC="\x31\xc0\x40\xcd\x80"` will clean (recommended) then print and debug input shellcode
 
-+ `make print S=foo.asm | grep -e x00 -e x20` is a useful trick to check for forbidden bytes (bytes 0x00 and 0x20 for instance)
++ `make c p S=foo.asm | grep -e x00 -e x20` is a useful trick to check for forbidden bytes (bytes 0x00 and 0x20 for instance)
+
++ `make c p xor S=foo.asm NO="[0x00, 0x20]"` xors the shellcode to avoid forbidden bytes
 
 
 ## Requires: 
