@@ -52,7 +52,7 @@ EXT:=$(suffix $(SOURCE))
 
 ## COMMANDS ##
 .PHONY: all help usage p print hexdump xxd help put c distr_clean clean a $(AUTO)\
-	$(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o install xor neg
+	$(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o install xor xor_basic neg
 
 # Default rule is usage #
 all: usage
@@ -62,7 +62,7 @@ help: usage # an alias #
 usage:
 	@less README.md
 
-install: xor.py neg.py
+install: xor.py xor_basic.py neg.py
 
 set: $(SOURCE)
 	$(EDITOR) $<
@@ -184,7 +184,7 @@ neg: neg.py $(BIN).xxd
 
 
 # Python script to xor a shellcode (with a random byte) and preprend the decoder #
-xor.py:
+xor_basic.py:
 	@echo 'import os, sys' >> $@
 	@echo '\ndef decoder(l, char, arch):' >> $@
 	@echo '\tif l > 0x100:\n\t\tfrom struct import pack;set_ecx = ["", "\x48"][int(arch == 64)] + "\x31\xc9\x66\xb9" + pack("<H", l)\n\telse:\n\t\tset_ecx = "\x6a" + chr(l) + "\x59"' >> $@
@@ -196,7 +196,7 @@ xor.py:
 	@echo '\nforbidden_chars = []' >> $@
 	@echo 'for c in $(NO):' >> $@
 	@echo '\tif chr(c) in decoder(l, "", ARCH):' >> $@
-	@echo '\t\tprint "xor: Warning, char " + hex(c) + " cannot be avoided since it is present in the prepended decoder"' >> $@
+	@echo '\t\tprint "xor_basic: Warning, char " + hex(c) + " cannot be avoided since it is present in the prepended decoder"' >> $@
 	@echo '\telse:' >> $@
 	@echo '\t\tforbidden_chars.append(c)' >> $@
 	@echo '\ni = 0\nloop = True\nwhile(loop and i < 100000):' >> $@
@@ -204,10 +204,71 @@ xor.py:
 	@echo '\tif rb in forbidden_chars:\n\t\tloop = True' >> $@
 	@echo '\tfor c in forbidden_chars:' >> $@
 	@echo '\t\tif chr(rb ^ c) in sc:\n\t\t\tloop = True' >> $@
-	@echo 'if loop:\n\tprint "xor: Failed to satisfy forbidden chars constraint"' >> $@
+	@echo 'if loop:\n\tprint "xor_basic: Failed to satisfy forbidden chars constraint"' >> $@
 	@echo '\nxor_sc = decoder(l, chr(rb), ARCH)' >> $@
 	@echo 'xor_sc += "".join(chr(ord(c) ^ rb) for c in sc)' >> $@
 	@echo 'print "xor-ed with byte " + hex(rb) + ":"' >> $@
+	@echo 'print "\"" + "".join("\\\\x" + c.encode("hex") for c in xor_sc) + "\""' >> $@
+	@echo 'print "Total length: " + str(len(xor_sc)) + " bytes."' >> $@
+
+xor_basic: xor_basic.py $(BIN).xxd
+	@echo " "
+	@python xor_basic.py "`cat $(BIN).xxd`" $(ARCH)
+
+
+# Python script to xor a shellcode (with a rotating random word) and preprend the decoder #
+xor.py:
+	@echo 'import os, sys' > $@
+	@echo '\ndef encode(sc, rw, arch):' >> $@
+	@echo '\tdef ror (w):' >> $@
+	@echo '\t\treturn ((w & (2 ** arch - 1)) >> 1) | (w << (arch - 1) & (2 ** arch - 1))' >> $@
+	@echo '\txsc = ""' >> $@
+	@echo '\tfor c in sc[::-1]:' >> $@
+	@echo '\t\txsc = chr(ord(c) ^ (rw & 255)) + xsc' >> $@
+	@echo '\t\trw = ror(rw)' >> $@
+	@echo '\treturn xsc' >> $@
+	@echo '\ndef decoder(l, word, arch):' >> $@
+	@echo '\tif l > 0x100:' >> $@
+	@echo '\t\tfrom struct import pack;set_ecx = ["", "\x48"][int(arch == 64)] + "\x31\xc9\x66\xb9" + pack("<H", l)' >> $@
+	@echo '\telse:' >> $@
+	@echo '\t\tset_ecx = "\x6a" + chr(l) + "\x59"' >> $@
+	@echo '\treturn set_ecx + ["", "\x48\x31\xc0"][int(arch == 64)] + "\xb8" + word + "\xeb\x0b\x5e\x30\x44\x0e\xff\xd1\xc8\xe2\xf8\xeb\x05\xe8\xf0\xff\xff\xff"' >> $@
+	@echo '\n' >> $@
+	@echo 'argc = len(sys.argv) - 1' >> $@
+	@echo 'if argc != 1 and argc != 2:' >> $@
+	@echo '\tprint "Usage:\\n\\tpython " + sys.argv[0] + " \\\\x..\\\\x... " + "ARCH"' >> $@
+	@echo '\tsys.exit(1)' >> $@
+	@echo '\nsc = "".join(["", c][int(c != "\\\\" and c != "x")] for c in sys.argv[1]).decode("hex")' >> $@
+	@echo 'l = len(sc)' >> $@
+	@echo 'ARCH = int(sys.argv[2])' >> $@
+	@echo '\nforbidden_chars = []' >> $@
+	@echo 'for c in $(NO):' >> $@
+	@echo '\tif chr(c) in decoder(l, "", ARCH):' >> $@
+	@echo '\t\tprint "xor: Warning, char " + hex(c) + " cannot be avoided since it is present in the prepended decoder"' >> $@
+	@echo '\telse:' >> $@
+	@echo '\t\tforbidden_chars.append(c)' >> $@
+	@echo '\ni = 0' >> $@
+	@echo 'loop = True' >> $@
+	@echo 'while(loop and i < 100000):' >> $@
+	@echo '\ti += 1' >> $@
+	@echo '\tloop = False' >> $@
+	@echo '\trbs = os.urandom(4)' >> $@
+	@echo '\trword = 0' >> $@
+	@echo '\tfor rb in rbs:' >> $@
+	@echo '\t\tif rb in forbidden_chars:' >> $@
+	@echo '\t\t\tloop = True' >> $@
+	@echo '\t\trword = rword * 256 + ord(rb)' >> $@
+	@echo '\tif not loop:' >> $@
+	@echo '\t\trword = sum(ord(rbs[k]) * ((2 ** 8) ** k) for k in range(4))' >> $@
+	@echo '\t\txor_sc = encode(sc, rword, ARCH)' >> $@
+	@echo '\t\tfor fc in forbidden_chars:' >> $@
+	@echo '\t\t\tif chr(fc) in xor_sc:' >> $@
+	@echo '\t\t\t\tloop = True' >> $@
+	@echo 'if loop:' >> $@
+	@echo '\tprint "xor: Failed to satisfy forbidden chars constraint"' >> $@
+	@echo '\txor_sc = encode(sc, rword, ARCH)' >> $@
+	@echo 'xor_sc = decoder(l, rbs, ARCH) + xor_sc' >> $@
+	@echo '\nprint "xor-ed with word " + hex(rword) + ":"' >> $@
 	@echo 'print "\"" + "".join("\\\\x" + c.encode("hex") for c in xor_sc) + "\""' >> $@
 	@echo 'print "Total length: " + str(len(xor_sc)) + " bytes."' >> $@
 
@@ -232,6 +293,7 @@ c:
 
 distr_clean: c
 	@rm -f xor.py
+	@rm -f xor_basic.py
 	@rm -f neg.py
 	@ls
 
