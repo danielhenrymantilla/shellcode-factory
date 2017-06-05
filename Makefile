@@ -193,7 +193,7 @@ $(NEG): $(NEG).py $(BIN).xxd
 $(XOR_BASIC).py:
 	@echo 'import os, sys' >> $@
 	@echo '\ndef decoder(l, char, arch):' >> $@
-        @echo '\tif l > 0xff:' >> $@
+	@echo '\tif l > 0xff:' >> $@
 	@echo '\t\tfrom struct import pack;set_ecx = ["", "\x48"][int(arch == 64)] + "\x31\xc9" + "\x66\xb9" + pack("<H", l)' >> $@
 	@echo '\telse:' >> $@
 	@echo '\t\tset_ecx = ["", "\x48"][int(arch == 64)] + "\x31\xc9" + "\xb1" + chr(l)' >> $@
