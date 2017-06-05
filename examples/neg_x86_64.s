@@ -24,6 +24,7 @@ xorloop:
 
 .if MINIMAL == 1
 .else
+	jmp negcode
 put_eip:
 	call in_stack
 .endif
