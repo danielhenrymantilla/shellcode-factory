@@ -66,7 +66,7 @@ all: usage
 help: usage # an alias #
 
 usage:
-	@less README.md
+	@tac README.md
 
 install: $(XOR).py $(XOR_BASIC).py $(NEG).py
 
