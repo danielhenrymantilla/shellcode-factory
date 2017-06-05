@@ -1,6 +1,6 @@
-# /* assembly source for xor.py, both x86 & x64 compatible | Length: 21 - 25 bytes */ #
+# /* assembly source for XOR_BASIC, both x86 & x64 compatible | Length: 21 - 25 bytes */ #
 .set BYTE, 0x55
-.set LEN, 0x124
+.set LEN, 0x24
 
 .if ARCH == 64
 	.set Ecx, %rcx
@@ -11,12 +11,11 @@
 .endif
 
 .macro set_Ecx
-.if LEN > 0x100				# LEN is 2 bytes long
 	xor Ecx, Ecx
+.if LEN > 0x100				# LEN is 2 bytes long
 	movw $LEN, %cx
 .else					# LEN is 1 byte long
-	push $LEN
-	pop Ecx
+	movb $LEN, %cl
 .endif					# We now have Ecx == $LEN
 .endm
 
