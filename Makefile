@@ -66,7 +66,7 @@ all: usage
 help: usage # an alias #
 
 usage:
-	@tac README.md
+	@(pandoc README.md | lynx -stdin) || less README.md
 
 install: $(XOR).py $(XOR_BASIC).py $(NEG).py
 

@@ -41,9 +41,9 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 +  `clean` / `c`		- removes generated temporary files
 
-+  `install`			- generates `neg.py` and `xor.py`
++  `install`			- generates _neg.py_, _xor_byte.py_ and _xor.py_
 
-+  `distr_clean`		- removes any non-source file at `.`
++  `distr_clean`		- removes all non-source files in `.`
 
  
 ### parameters:
@@ -86,4 +86,6 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 6. `nano` (optional: `set` and `put` targets only, and you can replace the `EDITOR=...` line in the _Makefile_ by your own editor)
 
-7. _GNU_ `make` of course
+7. `pandoc` & `lynx` (optional) : print a nicer help/usage message
+
+8. _GNU_ `make` of course
