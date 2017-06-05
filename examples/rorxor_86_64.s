@@ -1,4 +1,4 @@
-# /* Assembly source for XOR, both x86 & x64 compatible - Length: 28 & 34 bytes respectively */ #
+# /* Assembly source for XOR, both x86 & x64 compatible - Length: 27 & 34 bytes respectively */ #
 
 .set LEN, 50
 .if ARCH == 64

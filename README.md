@@ -33,8 +33,11 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 +  `neg`	 - negates the shellcode, and prepends to it a 12-bytes-long decoder. It assumes the shellcode is reached from a smashed stack
 
-+  `xor`	 - xors the shellcode with a random byte, and prepends to it an appropriate decoder
-(the decoder is 21-25 bytes long). It will try to avoid the bytes from the _NO_ parameter.
++  `xor_byte`	 - xors the shellcode with a random byte, and prepends to it an appropriate decoder
+(the decoder is 21-26 bytes long). It will try to avoid the bytes from the _NO_ parameter.
+
++  `xor`	 - xors the shellcode with a random rotating word, and prepends to it an appropriate decoder
+(the decoder is 27-34 bytes long). It will try to avoid the bytes from the _NO_ parameter.
 
 +  `clean` / `c`		- removes generated temporary files
 

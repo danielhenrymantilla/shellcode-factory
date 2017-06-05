@@ -1,4 +1,4 @@
-# /* assembly source for XOR_BASIC, both x86 & x64 compatible | Length: 21 - 25 bytes */ #
+# /* assembly source for XOR_BASIC, both x86 & x64 compatible | Length: 21 - 26 bytes */ #
 .set BYTE, 0x55
 .set LEN, 0x24
 
