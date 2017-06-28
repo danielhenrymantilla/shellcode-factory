@@ -40,6 +40,9 @@ XOR=xor
 XOR_BASIC=xor_byte
 NEG=neg_short
 
+ifneq ($(PAUSE), NO)
+PAUSECMD:=@read -p "(press [enter] to continue, or [^C] to cancel)`echo \\\n\\\r`" foo
+endif
 # Program to edit files with
 EDITOR=@nano
 
@@ -102,11 +105,15 @@ $(ASSEMBLY): $(BIN).o
 
 # Debug it #
 $(DEBUG): $(ASSEMBLY)
+	@echo "About to debug $<:"
+	$(PAUSECMD)
 	gdb -ex "start" $<
 
 # Debug the shellcode (smashed stack situation) #
 sc_$(DEBUG): $(AUTO).c
 	$(CC) -g -m$(ARCH) $(VULNFLAGS) -o $(AUTO) $<
+	@echo "About to debug the shellcode:"
+	$(PAUSECMD)
 	gdb -ex "b *&shellcode" -ex "disas &shellcode" -ex "run" $(AUTO)
 
 $(DEBUG)_sc: sc_$(DEBUG) # an alias #
@@ -141,9 +148,12 @@ endif
 
 $(AUTO): $(AUTO).c
 	$(CC) -g -m$(ARCH) $(VULNFLAGS) -o $@ $<
-	@echo "\nC program compiled successfully.\nRunning it:"
+	@echo "C program compiled successfully. The source file of this program is '$<'"
+	@echo "\nAbout to run the C program to test the shellcode:"
+	@echo " /!\\ never run untrusted shellcode /!\\"
+	$(PAUSECMD)
+	@echo "Running it:"
 	@./$(AUTO)
-	@echo "\nThe source file of this program is '$(AUTO).c'\n"
 
 a: $(AUTO) # an alias #
 
