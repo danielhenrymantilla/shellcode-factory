@@ -29,19 +29,20 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
    loading those hex bytes into an auto-generated tester program (_auto.c_)  
    compiling and running that very program
 
-+  `debug_sc`	 - debugs _auto_ i.e. the shellcode when called from a smashed stack
++  `debug_sc`	  - debugs _auto_ i.e. the shellcode when called from a smashed stack
 
-+  `neg`	 - negates the shellcode, and prepends to it a 12-bytes-long decoder. It assumes the shellcode is reached from a smashed stack
++  `neg`	  - negates the shellcode, and prepends to it a 12-bytes-long decoder. It assumes the shellcode is reached from a smashed stack
 
-+  `xor_byte`	 - xors the shellcode with a random byte, and prepends to it an appropriate decoder
++  `xor_byte`	  - xors the shellcode with a random byte, and prepends to it an appropriate decoder
 (the decoder is 21-26 bytes long). It will try to avoid the bytes from the _NO_ parameter.
 
-+  `xor`	 - xors the shellcode with a random rotating word, and prepends to it an appropriate decoder
++  `xor`	  - xors the shellcode with a random rotating word, and prepends to it an appropriate decoder
 (the decoder is 27-34 bytes long). It will try to avoid the bytes from the _NO_ parameter.
 
-+  `clean` / `c`		- removes generated temporary files
++  `alphanumeric` - transforms the shellcode into one using alphanumeric chars only
+(it needs to be reached right after a 'ret' instruction for it to work)
 
-+  `install`			- generates _neg.py_, _xor_byte.py_ and _xor.py_
++  `clean` / `c`		- removes generated temporary files
 
 +  `distr_clean`		- removes all non-source files in `.`
 
@@ -70,6 +71,8 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 + `make c p S=foo.asm | grep -e x00 -e x20` is a useful trick to check for forbidden bytes (bytes 0x00 and 0x20 for instance)
 
 + `make c p xor S=foo.asm NO="[0x00, 0x20]"` xors the shellcode to avoid forbidden bytes
+
++ `make c p alphanumeric S=foo.s ` generates an alphanumeric version of the shellcode
 
 
 ## Requires: 
