@@ -185,13 +185,14 @@ $(NEG): $(HELPERS)/$(NEG).py $(BIN).xxd
 # Python script to xor a shellcode (with a random byte) and preprend the decoder #
 $(XOR_BASIC): $(HELPERS)/$(XOR_BASIC).py $(BIN).xxd
 	@echo " "
-	@python $(HELPERS)/$(XOR_BASIC).py "`cat $(BIN).xxd`" $(ARCH)
+	@python $(HELPERS)/$(XOR_BASIC).py "`cat $(BIN).xxd`" $(ARCH) $(NO)
 
 # Python script to xor a shellcode (with a rotating random word) and preprend the decoder #
 $(XOR): $(HELPERS)/$(XOR).py $(BIN).xxd
 	@echo " "
-	@python $(HELPERS)/$(XOR).py "`cat $(BIN).xxd`" $(ARCH)
+	@python $(HELPERS)/$(XOR).py "`cat $(BIN).xxd`" $(ARCH) $(NO)
 
+# Python script to write the shellcode using alphanumeric chars only #
 $(ALPHA): $(HELPERS)/$(ALPHA).py $(BIN).xxd
 	@echo " "
 	@python $(HELPERS)/$(ALPHA).py "`cat $(BIN).xxd`" $(ARCH)
