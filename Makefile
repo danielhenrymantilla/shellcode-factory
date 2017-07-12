@@ -42,9 +42,11 @@ XOR_BASIC=xor_byte
 NEG=neg_short
 ALPHA=alphanumeric
 
+# PAUSE=NO will disable the pause-before-execution security #
 ifneq ($(PAUSE), NO)
 PAUSECMD:=@read -p "(press [enter] to continue, or [^C] to cancel)`echo \\\n\\\r`" foo
 endif
+
 # Program to edit files with
 EDITOR=@nano
 
@@ -61,12 +63,13 @@ BIN:=$(basename $(notdir $(SOURCE)))
 EXT:=$(suffix $(SOURCE))
 
 ## COMMANDS ##
-.PHONY: all help usage p print hexdump xxd help put c distr_clean clean a $(AUTO)\
-	$(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o \
+.PHONY: help usage p print hexdump xxd help put c clean x a $(AUTO) \
+	build $(ASSEMBLY) $(DEBUG) $(DEBUG)_sc sc_$(DEBUG) $(BIN).o \
 	$(XOR) $(XOR_BASIC) $(NEG) $(ALPHA)
 
-# Default rule is usage #
-all: usage
+# Default rule is print #
+all: print
+	@echo 'Tip: use `make help` for the man page'
 
 help: usage # an alias #
 
@@ -102,6 +105,8 @@ endif
 # Compile the assembly as an executable program #
 $(ASSEMBLY): $(BIN).o
 	$(CC) -m$(ARCH) -nostdlib -o $@ $< -e$(E)
+
+build: $(ASSEMBLY) # an alias #
 
 # Debug it #
 $(DEBUG): $(ASSEMBLY)
@@ -157,7 +162,9 @@ $(AUTO): $(AUTO).c
 
 a: $(AUTO) # an alias #
 
-hexdump: $(BIN).xxd
+x: $(AUTO) # an alias #
+
+print: $(BIN).xxd
 	@echo " "
 	@cat /tmp/_len_ || true
 	@echo " "
@@ -172,7 +179,7 @@ endif
 
 p: print # an alias #
 
-print: hexdump # an alias #
+hexdump: print # an alias #
 
 xxd: hexdump # an alias #
 
@@ -211,10 +218,7 @@ c:
 	@rm -f *~
 	@rm -f *.hex
 	@rm -f *.xxd
-
-distr_clean: c
 	@rm -f $(HELPERS)/*.pyc
-	@ls
 
 ._raw_.s:
 	@echo ".text\n.globl _start\n_start:\n\t.ascii \"$(SC)\"" > $@
