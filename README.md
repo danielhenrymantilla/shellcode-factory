@@ -54,9 +54,9 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 ### Examples:
 
-+ `make print x S=foo.s LANG=C` will print the shellcode from _foo.s_ with C syntax and execute it
++ `make print S=foo.s LANG=C` will print the shellcode from _foo.s_ with C syntax
 
-+ `make S=foo.s set c p a ARCH=64` will let you edit _foo.s_ and will then hexdump it and attempt to run it (x64)
++ `make S=foo.s set c p x ARCH=64` will let you edit _foo.s_ and will then hexdump it and attempt to run it (x64)
 
 + `make c print SC="\x31\xc0\x40\xcd\x80"` will parse input shellcode into assembly instructions
 
