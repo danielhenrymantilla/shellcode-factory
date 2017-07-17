@@ -77,7 +77,10 @@ class Assembly(object):
 				        l_hexchars.append(ord(x.decode("hex")))
 			self.ascii += "".join(chr(x) for x in l_hexchars)
 			self.bytess.append(l_hexchars)
-			self.mnemonics.append(s.split("\t")[2])
+			if len(s.split("\t")) < 3:
+				self.mnemonics.append("")
+			else:
+				self.mnemonics.append(s.split("\t")[2])
 		self.len = len(self.ascii)
 		return
 
