@@ -28,7 +28,7 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 + `xor_byte`			- will xor the shellcode with a random byte, and prepend to it an appropriate decoder
 (the decoder is 21-26 bytes long). It will try to avoid the bytes from the _NO_ parameter.
 
-+ `xor`				- will xor the shellcode with a random rotating word, and prepends to it an appropriate decoder
++ `xor`				- will xor the shellcode with a random rotating word, and prepend to it an appropriate decoder
 (the decoder is 27-34 bytes long). It will try to avoid the bytes from the _NO_ parameter.
 
 +  `alphanumeric`		- will transform the shellcode into one using alphanumeric chars only
@@ -56,7 +56,7 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 ### Examples:
 
-+ `make print S=foo.asm SYNTAX=INTEL` will print the shellcode from _foo.s_ with INTEL syntax
++ `make print S=foo.asm SYNTAX=INTEL` will print the shellcode from _foo.asm_ with INTEL syntax
 
 + `make S=foo.s set c p x ARCH=64` will let you edit _foo.s_ and will then hexdump it and attempt to run it (x64)
 
@@ -83,8 +83,10 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 5. `objdump` (optional: you can set `OBJDUMP` to `DISABLED` in the _Makefile_)
 
-6. `nano` (optional: `set` and `put` targets only, and you can replace the `EDITOR=...` line in the _Makefile_ by your own editor)
+6. `ndisasm` (optional: only needed when SYNTAX=INTEL)
 
-7. `pandoc` & `lynx` (optional) : print a nicer help/usage message
+7. `nano` (optional: `set` and `put` targets only, and you can replace the `EDITOR=...` line in the _Makefile_ by your own editor)
 
-8. _GNU_ `make` of course
+8. `pandoc` & `lynx` (optional) : print a nicer help/usage message
+
+9. _GNU_ `make` of course
