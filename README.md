@@ -51,10 +51,12 @@ It supports both Gas and Intel syntax (_.s_ and _.asm_ extensions respectively),
 
 + `LANG=C`						Changes the formatting of the `print` command to use a C-style array of bytes
 
++ `SYNTAX=INTEL`					Changes the syntax used to display assembly source code
+
 
 ### Examples:
 
-+ `make print S=foo.s LANG=C` will print the shellcode from _foo.s_ with C syntax
++ `make print S=foo.asm SYNTAX=INTEL` will print the shellcode from _foo.s_ with INTEL syntax
 
 + `make S=foo.s set c p x ARCH=64` will let you edit _foo.s_ and will then hexdump it and attempt to run it (x64)
 
