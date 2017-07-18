@@ -29,9 +29,11 @@ class Assembly(object):
 	len = 0
 	_m = {}
 	autoassemble = True
+	arch = 32
 
-	def __init__(self, *args):
-		self._add(*args)
+	def __init__(self, arch = 32, autoassemble = True):
+		self.arch = arch
+		self.autoassemble = autoassemble
 
 	def _append_instr(self, instr):
 		self.code += "\t" + instr + "\n"
@@ -88,7 +90,7 @@ class Assembly(object):
 		if debug: print "Asm(\"" + self.code + "\")"
 		file_content = ".text\n.globl _start\n_start:\n" + self.code.replace(";", "\n\t") + "\n\tnop"
 		system("echo '" + file_content + "' > ._tmp_.s")
-		system("gcc -m32 -nostdlib -c ._tmp_.s")
+		system("gcc -m" + str(self.arch) + " -nostdlib -c ._tmp_.s")
 		argv = check_output("objdump -d ._tmp_.o | grep -e \" ...:\" | cut -d: -f2", shell = True)
 	        self._parse(argv.split("\n")[:-2])
 		system("rm -f ._tmp_.*")
@@ -114,9 +116,9 @@ class Assembly(object):
 		return call
 
 
-def a(cmd): return Assembly(cmd).__str__()
+def a(cmd): return Assembly()(cmd).__str__()
 
-def a_print(cmd): print Assembly(cmd)
+def a_print(cmd): print Assembly()(cmd)
 
 if __name__ == "__main__":
         while True:
