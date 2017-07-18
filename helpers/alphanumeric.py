@@ -21,7 +21,7 @@ class Utils:
                 2 * (x * 0x100 + y) + z = offset + x + (x ? 4 : 0)
                 """
 	        hundreds = 0
-                # 4 == Asm("inc %esp; pop %ecx; push %ecx; dec %esp").len
+                # 4 = Assembly()("inc %esp; pop %ecx; push %ecx; dec %esp").len
                 incpoppushdec = 4
                 for hundreds in range(0x100):
 		        if hundreds == 1: offset += incpoppushdec
@@ -31,14 +31,15 @@ class Utils:
                                            2*(hundreds * 0x100 + twice) + once:
 					        return once, twice, hundreds
                         offset += 1
+		assert(False)
 
         @staticmethod
-        def to_hex_wordff(bytes):
+        def to_hex_wordff(bytes, arch = 32):
                 """
                 Converts a series of bytes into its integer representation,
                 but replacing the byte 0xff by a valid one
                 """
-                assert(len(bytes) <= 4)
+                assert(len(bytes) <= arch / 8)
                 rev_chars = \
                   ((chr(i) if i != 0xff else Xor.zero) for i in bytes[::-1])
                 return "$0x" + "".join(c.encode("hex") for c in rev_chars)
@@ -56,7 +57,7 @@ class Xor:
         # String of valid chars
         import string;\
 	valid_chars = \
-          (string.digits + string.ascii_letters).translate(None, forbidden_chars)
+         (string.digits + string.ascii_letters).translate(None, forbidden_chars)
         # One valid char will represent 0xff
         zero = valid_chars[0]
         # List of valid bytes
@@ -64,17 +65,18 @@ class Xor:
         # List of validff bytes (byte 0xff added for xor completude)
 	valid_bytesff = [ord(c) for c in valid_chars.replace(zero, "\xff")]
 
-        # Dictionary of valid bytes split as tuples of valid bytes
+        # Dictionary of: valid bytes split as tuples of valid bytes
         dups = {}
 	for x in valid_bytes:
 		for y in valid_bytes:
 			if (x ^ y in valid_bytes):
 				dups[x ^ y] = [x, y]
 
-        # Dictionary of bytes split as tuples of validff bytes
+        # Dictionary of: bytes split as tuples of a validff byte and valid bytes
 	splits = {}
 	splits[0xff] = [0xff, valid_bytesff[1], valid_bytesff[1]]
 	for z in valid_bytes: splits[z] = [z]
+	splits[ord(zero)] = [valid_bytesff[1], valid_bytesff[1], ord(zero)]
 	for x in valid_bytesff:
 		for z in valid_bytes:
 			if not (x ^ z in splits): splits[x ^ z] = [x, z]
@@ -95,7 +97,7 @@ class Xor:
 	        """
 	        Input  = word  :     byte     array
 	        Output = words : (byte array) array, verifying that
-	        for j in range(len(word)): 
+	        for j in range(len(word)):
                         word[j] == Xor.of(words[i][j] for i in range(words_nb))
 	        """
                 Utils.debug("Debug(split)", "got " + \
@@ -112,11 +114,18 @@ class Xor:
 				words[i - 1][-1] = x1
 				words[i].append(x2)
 				i += 1
+		Utils.debug("Debug(split)", "returning", words)
                 return words
 
 
 class Alphanumeric(Assembly):
-        def prologue(self):
+	eax, ecx, edx, ebx, esp, ebp, esi, edi = "", "", "", "", "", "", "", ""
+	word_size = 2
+	dword_size = 4
+	qword_size = 8
+	int_size = 0
+
+	def prologue(self):
 	        self.macro \
                 ("pmov")(lambda src, dst: \
                 Utils.none(self.push(src), \
@@ -153,8 +162,10 @@ class Alphanumeric(Assembly):
 		        self.decl("%eax")
 		        self.pmov("%eax", "%edx")
 		        self.xorb("$0x33", "%al")
-		        self.set_regs(eax = "%edx", ebx = "%edx", ecx = "%edx", \
-                          edx = "%eax", esi = "%eax", edi = "%eax", ebp = "%ecx")
+		        self.set_regs(	eax = "%edx", ebx = "%edx",	\
+					ecx = "%edx", edx = "%eax",	\
+					esi = "%eax", edi = "%eax",	\
+					ebp = "%ecx"			)
 		        self.incl("%ebx")
 		        self.rep_add(3, "%edx")
                 @self.macro()
@@ -178,10 +189,10 @@ class Alphanumeric(Assembly):
                 def pushff(word):
                         """
                         Pushes the 4-bytes word using alphanumeric opcodes only
-                        (Requires %esi = -0x34, %dl = 0x30 ^ 0xff = 0xcf and 
-                        %ecx = 0xffffffff)
+                        (Requires %esi = -0x34, %dl = 0x30 ^ 0xff = 0xcf
+			and	%ecx = 0xffffffff)
                         """
-                        assert(len(word) == 4)
+                        assert(len(word) == self.dword_size)
                         is_validff = True
                         for i in word:
                                 is_validff = is_validff and \
@@ -207,12 +218,12 @@ class Alphanumeric(Assembly):
                                           "0x" + str(34 + i) + "(%esp, %esi)")
         	        return
 	        sc += (-len(sc) % 4) * "G" # "G" -> "inc %edi"
-	        if Utils.verbose:
-                        print sc + " : " + str(len(sc)) + " bytes."
+	        Utils.debug(sc + " : " + str(len(sc)) + " bytes.")
                 all_words = []
                 for k in range(len(sc) / 4):
                         all_words.append( \
                           Xor.split([ord(c) for c in sc[4 * k:4 * (k + 1)]]))
+		Utils.debug(all_words)
 	        for words in all_words[::-1]:
 		        Utils.debug([Utils.to_hex_wordff(word) \
                                      for word in words])
@@ -243,15 +254,27 @@ class Alphanumeric(Assembly):
         def __init__(self, sc, arch):
                 self.autoassemble = False
                 if arch == 64:
+			self.eax, self.ecx, self.edx, self.ebx,	\
+			self.esp, self.ebp, self.esi, self.edi = \
+			"%rax", "%rbx", "%rcx", "%rdx",\
+			"%rsp", "%rbp", "%rsi", "%rdi"
+			self.int_size = 8
                         print "'" + argv[0] + \
                                 "' error: 64 bits support not implemented yet"
                         exit(1)
+		else:
+			self.eax, self.ecx, self.edx, self.ebx,	\
+			self.esp, self.ebp, self.esi, self.edi = \
+			"%eax", "%ebx", "%ecx", "%edx",\
+			"%esp", "%ebp", "%esi", "%edi"
+			self.int_size = 4
                 self.prologue()
                 self.push_sc(sc)
                 base_code = self.code
                 self.epilogue()
                 self._assemble()
                 code_offset = self.len - 1
+		if Utils.verbose: print self
                 self.code = base_code
                 self.epilogue(*Utils.offset_split_as_valids(code_offset))
 	        self._assemble()
@@ -260,31 +283,14 @@ class Alphanumeric(Assembly):
 if __name__ == "__main__":
         if Utils.verbose: Xor.display()
         from sys import argv
+	if len(argv) < 2 or len(argv) > 3:
+		print "Usage:\n\tpython", argv[0], "shellcode", "[arch]"
+		exit(1)
         sc = "".join(c if c != "\\" and c != "x" else "" \
                                     for c in argv[1]).decode("hex")
-        arch = int(argv[2]) if len(argv) > 2 else 32
+        arch = int(argv[2]) if len(argv) == 3 else 32
         code = Alphanumeric(sc, arch)
         if Utils.verbose: print code
         print "alphanumeric_shellcode ="
         print code.ascii
         print "Total: " + str(code.len) + " bytes."
-        
-        if False:
-                code.code = base_code
-                code._assemble()
-	        total_length = code.len + 12 # + prologue_length
-	        offset, edx, hundreds = \
-                                Utils.offset_split_as_valids(total_length)
-	        print "offset:", hex(offset)
-	        print "edx:", hex(edx)
-	        print "hundreds:", hundreds
-                print ""
-	        epilogue_ascii = ""
-	        if hundreds > 0: epilogue_ascii += "DZ" + "B" * hundreds + "RL"
-	        epilogue = Asm(".ascii \"" + "Tj" + chr(edx) + epilogue_ascii \
-                               + "ZQX4d0DU" + chr(offset) + "X\"")
-                print epilogue
-	        shellcode = code.ascii + epilogue.ascii # + prologue.ascii
-	        print "shellcode =", shellcode
-                code.epilogue(offset, edx, hundreds)
-                code._assemble()
