@@ -1,5 +1,8 @@
 ## DEFINES ##
 
+# Use peda
+GDBARGS=-ix ~/.pedainit
+
 # Assembly syntax #
 SYNTAX=GAS
 
@@ -115,14 +118,14 @@ build: $(ASSEMBLY) # an alias #
 $(DEBUG): $(ASSEMBLY)
 	@echo "About to debug $<:"
 	$(PAUSECMD)
-	gdb -ex "start" $<
+	gdb $(GDBARGS) -ex "start" $<
 
 # Debug the shellcode (smashed stack situation) #
 sc_$(DEBUG): $(AUTO).c
 	$(CC) -g -m$(ARCH) $(VULNFLAGS) -o $(AUTO) $<
 	@echo "About to debug the shellcode:"
 	$(PAUSECMD)
-	gdb -ex "b *&shellcode" -ex "disas &shellcode" -ex "run" $(AUTO)
+	gdb $(GDBARGS) -ex "b *&shellcode" -ex "disas &shellcode" -ex "run" $(AUTO)
 
 $(DEBUG)_sc: sc_$(DEBUG) # an alias #
 
@@ -133,12 +136,12 @@ ifneq ($(SYNTAX), INTEL)
 ifeq ($(OBJDUMP), ENABLED)
 	@objdump -d $< # optional
 else
-	@gdb -n -batch -ex "x/1500i _start" $<
+	@gdb $(GDBARGS) -n -batch -ex "x/1500i _start" $<
 endif
 endif
-	@gdb -n -batch -ex "info file" $< | grep .text | cut -d "i" -f 1 > /tmp/_infofile_
-	@gdb -n -batch -ex "p `cat /tmp/_infofile_`" | cut -d "-" -f 2 > /tmp/_len_
-	@gdb -n -batch -ex "x/`cat /tmp/_len_`bx `cat /tmp/_infofile_ | cut -d "-" -f 1 && rm -f /tmp/_infofile_`" $< | cut -d ":" -f 2 > $@
+	@gdb $(GDBARGS) -n -batch -ex "info file" $< | grep .text | cut -d "i" -f 1 > /tmp/_infofile_
+	@gdb $(GDBARGS) -n -batch -ex "p/d `cat /tmp/_infofile_`" | cut -d "-" -f 2 > /tmp/_len_
+	@gdb $(GDBARGS) -n -batch -ex "x/`cat /tmp/_len_`bx `cat /tmp/_infofile_ | cut -d "-" -f 1 && rm -f /tmp/_infofile_`" $< | cut -d ":" -f 2 > $@
 	@echo "Total: `cat /tmp/_len_` bytes" > /tmp/_len_
 
 $(BIN).xxd: $(BIN).hex
