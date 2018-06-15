@@ -34,14 +34,14 @@ _start:
 	push EDX		# null-terminator byte(s)
 
 .if ARCH == 64
-	movabs $0x68732f2f6e69622f, %rdi
-	push %rdi		# '/bin//sh'
+	movabs $0x68732f6e69622f2f, %rdi
+	push %rdi		# '//bin/sh'
 .else
-	push $0x68732f2f	# '//sh'
-	push $0x6e69622f	# '/bin'
+	push $0x68732f6e	# 'n/sh'
+	push $0x69622f2f	# '//bi'
 .endif
 
-	mov ESP, EBX		# "/bin//sh"
+	mov ESP, EBX		# "//bin/sh"
 
 # Option 1: argv = NULL (2 bytes long) #
 	mov	EDX, ECX
